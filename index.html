@@ -173,6 +173,47 @@
   .lesson-item.has-video .li-dot{background:#22c55e;}
   .lesson-item.active .li-dot{background:var(--bb);}
 
+  /* ── FAVOURITES ── */
+  .li-star{
+    margin-left:auto; flex-shrink:0;
+    font-size:13px; opacity:0; transition:opacity .12s, color .12s;
+    color:rgba(255,255,255,.3); cursor:pointer; padding:0 2px;
+  }
+  .lesson-item:hover .li-star{ opacity:1; }
+  .lesson-item.fav .li-star{ opacity:1; color:var(--bb); }
+  .fav-section{ border-bottom:1px solid var(--sb-border); }
+  .fav-header{
+    padding:10px 16px; display:flex; align-items:center; gap:8px;
+    font-size:11px; font-weight:700; color:var(--bb);
+    text-transform:uppercase; letter-spacing:.06em; cursor:pointer;
+    transition:background .12s; user-select:none;
+  }
+  .fav-header:hover{ background:rgba(0,170,238,.06); }
+  .fav-header .ch-chevron{ font-size:9px; color:rgba(0,170,238,.5); transition:transform .18s; }
+  .fav-header.open .ch-chevron{ transform:rotate(90deg); }
+  .fav-empty{ padding:10px 16px 12px; font-size:11px; color:rgba(255,255,255,.25); font-style:italic; }
+  .fav-item{
+    padding:7px 16px 7px 16px; cursor:pointer; font-size:12px; color:rgba(255,255,255,.55);
+    display:flex; align-items:center; gap:7px; transition:all .12s; line-height:1.35;
+  }
+  .fav-item:hover{ background:rgba(255,255,255,.06); color:rgba(255,255,255,.9); }
+  .fav-item.active{ background:rgba(0,170,238,.12); color:var(--bb); font-weight:600; }
+  .fav-course-tag{
+    font-size:9px; color:rgba(0,170,238,.6); font-weight:700;
+    background:rgba(0,170,238,.1); padding:1px 6px; border-radius:10px;
+    white-space:nowrap; flex-shrink:0; margin-left:auto;
+  }
+
+  /* ── OFFLINE DISCLAIMER ── */
+  .offline-notice{
+    aspect-ratio:16/9; background:var(--wh); border:1px solid var(--border);
+    border-radius:14px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:10px; padding:32px; text-align:center;
+  }
+  .offline-notice .on-icon{ font-size:32px; }
+  .offline-notice .on-title{ font-size:14px; font-weight:700; color:var(--text); }
+  .offline-notice .on-sub{ font-size:12px; color:var(--muted); max-width:340px; line-height:1.6; }
+
   /* ── MAIN ── */
   #main{flex:1;overflow-y:auto;background:var(--bg);}
 
@@ -351,6 +392,14 @@
       <div class="sb-course-name" id="sb-course-name">Niggehoff Training</div>
       <div class="sb-count" id="sb-count"></div>
     </div>
+    <div id="fav-section" class="fav-section">
+      <div class="fav-header open" id="fav-hdr" onclick="toggleFavPanel()">
+        <span class="ch-chevron">▶</span>
+        <span>★ Favoriten</span>
+        <span id="fav-count" style="margin-left:auto;font-size:10px;color:rgba(0,170,238,.5)"></span>
+      </div>
+      <div id="fav-list"></div>
+    </div>
     <div id="course-list"></div>
   </div>
 
@@ -363,7 +412,11 @@
         <span class="bc-sep">›</span>
         <span id="bc-chapter"></span>
       </div>
-      <div class="lesson-title-h" id="lesson-title"></div>
+      <div class="lesson-title-h" id="lesson-title" style="display:flex;align-items:center;gap:10px;">
+        <span id="lesson-title-text"></span>
+        <span id="fav-btn" onclick="toggleFav()" title="Zu Favoriten hinzufügen"
+          style="font-size:20px;cursor:pointer;color:rgba(0,170,238,.3);transition:color .15s;flex-shrink:0;margin-top:1px;">☆</span>
+      </div>
       <div class="lesson-grid">
         <div>
           <div id="player-container"></div>
@@ -479,9 +532,73 @@ document.getElementById('profile-modal').addEventListener('click', e => {
 // ── DATA ──────────────────────────────────────────────────
 let COURSES=[], allLessons=[], searchIdx=[], currentLesson=null;
 
+// ── FAVOURITES ────────────────────────────────────────────
+const FAV_KEY = () => `mcom_favs_${auth?.email||'guest'}`;
+let favSet = new Set(JSON.parse(localStorage.getItem(FAV_KEY())||'[]'));
+
+function saveFavs(){ localStorage.setItem(FAV_KEY(), JSON.stringify([...favSet])); }
+
+function toggleFavById(id){
+  favSet.has(id) ? favSet.delete(id) : favSet.add(id);
+  saveFavs();
+  buildSidebar();        // re-render sidebar (updates star + fav panel)
+  // keep current lesson active
+  if(currentLesson?.lesson){
+    const entry = allLessons.find(e=>e.lesson.id===currentLesson.lesson.id);
+    if(entry){ entry.item.classList.add('active'); }
+    const favBtn=document.getElementById('fav-btn');
+    if(favBtn){
+      const isFav=favSet.has(currentLesson.lesson.id);
+      favBtn.textContent=isFav?'★':'☆';
+      favBtn.style.color=isFav?'var(--bb)':'rgba(0,170,238,.3)';
+    }
+  }
+}
+
+function toggleFav(){
+  if(currentLesson?.lesson) toggleFavById(currentLesson.lesson.id);
+}
+
+function toggleFavPanel(){
+  const hdr=document.getElementById('fav-hdr');
+  const list=document.getElementById('fav-list');
+  hdr.classList.toggle('open');
+  list.style.display=hdr.classList.contains('open')?'block':'none';
+}
+
+function buildFavPanel(){
+  const list=document.getElementById('fav-list');
+  const countEl=document.getElementById('fav-count');
+  if(!favSet.size){
+    list.innerHTML=`<div class="fav-empty">Noch keine Favoriten gesetzt.</div>`;
+    countEl.textContent='';
+    return;
+  }
+  countEl.textContent=favSet.size;
+  const items=[];
+  COURSES.forEach(course=>{
+    course.chapters.forEach(ch=>{
+      ch.lessons.forEach(lesson=>{
+        if(favSet.has(lesson.id)) items.push({lesson,course,chapter:ch});
+      });
+    });
+  });
+  list.innerHTML='';
+  items.forEach(({lesson,course,chapter})=>{
+    const el=document.createElement('div');
+    el.className='fav-item';
+    const abbr=course.title.split(/[\s\(\)]/)[0].slice(0,8);
+    el.innerHTML=`<span style="color:var(--bb);font-size:11px">★</span>
+      <span style="flex:1;line-height:1.35">${lesson.title}</span>
+      <span class="fav-course-tag">${abbr}</span>`;
+    el.onclick=()=>loadLesson(lesson,el,course,chapter);
+    list.appendChild(el);
+  });
+}
+
 fetch('courses.json')
   .then(r=>r.json())
-  .then(data=>{ COURSES=data; buildSidebar(); buildWelcome(); buildSearchIdx(); })
+  .then(data=>{ COURSES=data; buildSidebar(); buildFavPanel(); buildWelcome(); buildSearchIdx(); })
   .catch(()=>{
     document.getElementById('welcome').innerHTML =
       `<div style="padding:44px;color:#ef4444;font-size:14px">
@@ -556,8 +673,10 @@ function buildSidebar() {
       }
       ch.lessons.forEach((lesson,li)=>{
         const item=document.createElement('div');
-        item.className='lesson-item'+((lesson.video_url||lesson.hls_url)?' has-video':'');
-        item.innerHTML=`<span class="li-dot"></span><span>${lesson.title}</span>`;
+        const isFav = favSet.has(lesson.id);
+        item.className='lesson-item'+((lesson.video_url||lesson.hls_url)?' has-video':'')+(isFav?' fav':'');
+        item.innerHTML=`<span class="li-dot"></span><span style="flex:1">${lesson.title}</span><span class="li-star" title="Favorit">★</span>`;
+        item.querySelector('.li-star').onclick=(e)=>{e.stopPropagation();toggleFavById(lesson.id);};
         item.onclick=()=>loadLesson(lesson,item,course,ch);
         grp.appendChild(item);
         allLessons.push({lesson,item,course,chapter:ch});
@@ -565,6 +684,7 @@ function buildSidebar() {
     });
     sec.appendChild(hdr); sec.appendChild(grp); list.appendChild(sec);
   });
+  buildFavPanel();
 }
 
 // ── SEARCH ────────────────────────────────────────────────
@@ -611,7 +731,11 @@ function loadLesson(lesson,itemEl,course,chapter) {
   document.getElementById('lesson-view').style.display='block';
   document.getElementById('bc-course').textContent=course.title;
   document.getElementById('bc-chapter').textContent=chapter.title;
-  document.getElementById('lesson-title').textContent=lesson.title;
+  document.getElementById('lesson-title-text').textContent=lesson.title;
+  // Favoriten-Stern aktualisieren
+  const favBtn=document.getElementById('fav-btn');
+  favBtn.textContent=favSet.has(lesson.id)?'★':'☆';
+  favBtn.style.color=favSet.has(lesson.id)?'var(--bb)':'rgba(0,170,238,.3)';
 
   const aud=document.getElementById('aud');
   const container=document.getElementById('player-container');
@@ -626,18 +750,30 @@ function loadLesson(lesson,itemEl,course,chapter) {
     </div>`;
     const v = document.getElementById('vid');
 
+    const showOffline=()=>{
+      container.innerHTML=`<div class="offline-notice">
+        <div class="on-icon">📴</div>
+        <div class="on-title">Inhalt nicht verfügbar</div>
+        <div class="on-sub">Dieser Inhalt wurde durch den Kursteilnehmer gelöscht oder offline gestellt, war aber noch im Datei- und Kurspfad auffindbar.</div>
+      </div>`;
+      aud.src=''; aud.load();
+    };
+
     if(lesson.hls_url){
       // HLS stream (Pro Training)
       if(Hls.isSupported()){
         const hls = new Hls();
+        hls.on(Hls.Events.ERROR,(e,d)=>{ if(d.fatal) showOffline(); });
         hls.loadSource(lesson.hls_url);
         hls.attachMedia(v);
       } else if(v.canPlayType('application/vnd.apple.mpegurl')){
-        v.src = lesson.hls_url; // Safari native HLS
-      }
+        v.src = lesson.hls_url;
+        v.addEventListener('error', showOffline, {once:true});
+      } else { showOffline(); }
       aud.src=''; aud.load();
     } else if(lesson.video_url){
       // Separate DASH video + audio tracks
+      v.addEventListener('error', showOffline, {once:true});
       v.src = lesson.video_url;
       if(lesson.audio_url){
         aud.src=lesson.audio_url;
