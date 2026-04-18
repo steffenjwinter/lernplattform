@@ -303,12 +303,12 @@
   .inline-summary .summary-bullets li{font-size:11px;}
 
   /* Materials bar — sits directly below the player */
-  .materials-bar{display:none;margin-top:12px;padding:12px 14px;
+  .materials-bar{margin-top:12px;padding:12px 14px;
     background:var(--wh);border:1px solid var(--border);border-radius:12px;
     display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-  .materials-bar.has-items{display:flex;}
   .mat-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
     letter-spacing:.06em;white-space:nowrap;margin-right:4px;}
+  .mat-empty{font-size:12px;color:var(--muted);font-style:italic;}
   .mat-item{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;
     background:var(--acc-l);border:1px solid rgba(0,170,238,.18);border-radius:8px;
     text-decoration:none;color:var(--acc-d);font-size:12px;font-weight:600;
@@ -859,7 +859,6 @@ function loadLesson(lesson,itemEl,course,chapter) {
   const mb=document.getElementById('materials-bar');
   const ml=document.getElementById('materials-list');
   if(lesson.materials?.length){
-    mb.classList.add('has-items');
     ml.innerHTML=lesson.materials.map(m=>{
       const ext=m.name.split('.').pop().toUpperCase();
       const icon=ext==='PDF'?'📄':ext.includes('PPT')?'📊':'📁';
@@ -868,7 +867,9 @@ function loadLesson(lesson,itemEl,course,chapter) {
         <span>${icon}</span><span>${label}</span><span class="mat-ext">${ext}</span>
       </a>`;
     }).join('');
-  } else { mb.classList.remove('has-items'); ml.innerHTML=''; }
+  } else {
+    ml.innerHTML='<span class="mat-empty">Keine Datei zum Download verfügbar (Niggehoff)</span>';
+  }
   renderSummary(lesson.id);
   window.scrollTo(0,0);
 }

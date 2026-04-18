@@ -10,8 +10,12 @@ download_audio.py
 merge_videos.py
 build_courses_json.py
 rescrape*.py
+generate_summaries.py
 server.py
 *.log
+
+# Debug-Dateien
+debug_*
 
 # Python
 __pycache__/
