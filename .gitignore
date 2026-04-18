@@ -1,0 +1,22 @@
+# Aus dem Kurs-Ordner NUR PDFs committen, alles andere ignorieren
+Kurs/**
+!Kurs/**/
+!Kurs/**/*.pdf
+!Kurs/**/*.PDF
+
+# Scraper / Build-Skripte (lokal only)
+scrape*.py
+download_audio.py
+merge_videos.py
+build_courses_json.py
+rescrape*.py
+server.py
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.env
+
+# macOS
+.DS_Store

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anmelden — mitarbeiter.com</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --bb:#00AAEE; --bb2:#0088CC; --bd:#060f1c; --bm:#0D1F35; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{ height:100%; font-family:'Inter',system-ui,sans-serif; overflow:hidden; }
+
+/* ── CUSTOM CURSOR ── */
+*{ cursor:none !important; }
+#cursor-dot{
+  position:fixed; width:8px; height:8px; border-radius:50%;
+  background:var(--bb); pointer-events:none; z-index:9999;
+  transform:translate(-50%,-50%);
+  transition:width .15s,height .15s,background .15s,opacity .15s;
+  box-shadow:0 0 10px rgba(0,170,238,.8);
+}
+#cursor-ring{
+  position:fixed; width:36px; height:36px; border-radius:50%;
+  border:1.5px solid rgba(0,170,238,.5); pointer-events:none; z-index:9998;
+  transform:translate(-50%,-50%);
+  transition:width .3s ease,height .3s ease,border-color .3s,opacity .2s;
+}
+body.cur-hover #cursor-dot{ width:12px; height:12px; background:#fff; box-shadow:0 0 20px rgba(0,170,238,1); }
+body.cur-hover #cursor-ring{ width:52px; height:52px; border-color:rgba(0,170,238,.8); border-width:2px; }
+
+/* ── BACKGROUND ── */
+.bg{
+  position:fixed; inset:0;
+  background:url('a81-2.jpg') center center / cover no-repeat;
+  z-index:0;
+}
+.bg::after{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg, rgba(6,15,28,.85) 0%, rgba(13,31,53,.78) 50%, rgba(6,15,28,.90) 100%);
+}
+
+/* ── PARTICLE CANVAS (z-index between overlay and card) ── */
+#hero-canvas{
+  position:fixed; inset:0;
+  width:100%; height:100%;
+  pointer-events:none; z-index:2;
+}
+
+/* ── PAGE ── */
+.page{
+  position:relative; z-index:3;
+  min-height:100vh;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:24px;
+}
+
+/* ── LIQUID GLASS CARD ── */
+.card{
+  width:100%; max-width:400px;
+  padding:44px 40px;
+  background:rgba(255,255,255,.07);
+  backdrop-filter:blur(28px) saturate(180%);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:20px;
+  box-shadow:
+    0 8px 40px rgba(0,0,0,.55),
+    0 0 0 0.5px rgba(255,255,255,.08) inset,
+    0 1px 0 rgba(255,255,255,.18) inset;
+  position:relative;
+}
+/* thin top highlight */
+.card::before{
+  content:''; display:block; position:absolute;
+  top:0; left:20px; right:20px; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.32),transparent);
+}
+
+/* ── BRAND ── */
+.brand{ text-align:center; margin-bottom:36px; }
+.brand img{ height:28px; object-fit:contain; }
+.brand-line{ width:36px; height:2px; background:var(--bb); border-radius:2px; margin:14px auto 0; }
+
+h1{ font-size:20px; font-weight:700; color:#fff; text-align:center; margin-bottom:5px; letter-spacing:-.02em; }
+.sub{ font-size:13px; color:rgba(255,255,255,.42); text-align:center; margin-bottom:28px; }
+
+/* ── FORM ── */
+.form-group{ margin-bottom:14px; }
+label{
+  display:block; font-size:10.5px; font-weight:600;
+  color:rgba(255,255,255,.45); text-transform:uppercase;
+  letter-spacing:.07em; margin-bottom:7px;
+}
+input{
+  width:100%; padding:11px 15px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1); border-radius:10px;
+  color:#fff; font-family:'Inter',sans-serif; font-size:14px; outline:none;
+  transition:border-color .2s, background .2s, box-shadow .2s;
+}
+input::placeholder{ color:rgba(255,255,255,.25); }
+input:focus{ border-color:var(--bb); background:rgba(0,170,238,.07); box-shadow:0 0 0 3px rgba(0,170,238,.15); }
+
+.pw-wrap{ position:relative; }
+.pw-wrap .eye{
+  position:absolute; right:13px; top:50%; transform:translateY(-50%);
+  font-size:15px; color:rgba(255,255,255,.3); user-select:none; transition:color .2s;
+}
+.pw-wrap .eye:hover{ color:rgba(255,255,255,.65); }
+
+/* ── ERROR ── */
+.error-msg{
+  background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.28);
+  border-radius:8px; padding:10px 14px; font-size:13px; color:#fca5a5;
+  margin-bottom:14px; display:none;
+}
+
+/* ── BUTTON ── */
+.btn{
+  width:100%; padding:13px;
+  background:var(--bb); border:none; border-radius:10px;
+  color:#fff; font-family:'Inter',sans-serif; font-size:14px;
+  font-weight:600; letter-spacing:.02em;
+  cursor:pointer; margin-top:8px;
+  transition:background .2s, box-shadow .2s, transform .1s;
+  position:relative; overflow:hidden;
+}
+.btn::after{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.12) 0%,transparent 100%);
+  border-radius:inherit; pointer-events:none;
+}
+.btn:hover{ background:#12c3ff; box-shadow:0 6px 24px rgba(0,170,238,.35); }
+.btn:active{ transform:scale(.99); }
+.btn:disabled{ opacity:.5; }
+
+/* ── FOOTER ── */
+.footer-block{ text-align:center; margin-top:20px; }
+.footer-internal{
+  display:inline-block;
+  font-size:9px; font-weight:700; letter-spacing:.14em;
+  color:rgba(0,170,238,.7); text-transform:uppercase;
+  border:1px solid rgba(0,170,238,.25); border-radius:4px;
+  padding:3px 10px; margin-bottom:8px;
+}
+.footer-company{ font-size:10.5px; color:rgba(255,255,255,.25); }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<canvas id="hero-canvas"></canvas>
+
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<div class="page">
+  <div class="card">
+    <div class="brand">
+      <img src="logo-light.png" alt="mitarbeiter.com">
+      <div class="brand-line"></div>
+    </div>
+
+    <h1>Willkommen zurück</h1>
+    <p class="sub">Melde dich an, um auf deine Inhalte zuzugreifen.</p>
+
+    <div class="error-msg" id="error">E-Mail oder Passwort ungültig.</div>
+
+    <form onsubmit="doLogin(event)">
+      <div class="form-group">
+        <label>E-Mail</label>
+        <input type="email" id="email" placeholder="dein@mitarbeiter.com"
+               autocomplete="email" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>Passwort</label>
+        <div class="pw-wrap">
+          <input type="password" id="pw" placeholder="••••••••"
+                 autocomplete="current-password" required>
+          <span class="eye" onclick="togglePw()">👁</span>
+        </div>
+      </div>
+      <button class="btn" type="submit" id="btn">Anmelden</button>
+    </form>
+  </div>
+
+  <div class="footer-block">
+    <div class="footer-internal">FOR INTERNAL USE ONLY</div><br>
+    <span class="footer-company">mitarbeiter.com Digital Recruiting GmbH</span>
+  </div>
+</div>
+
+<script>
+// ── AUTH (passwords stored as SHA-256 hashes — never plaintext) ──
+const USERS = {
+  'sw@mitarbeiter.com': { h:'040fc1b1a79f552e1d0f51b75a186548c7aeced36ac64cba7f281f1be62a0f7a', name:'Steffen Winter', role:'inhaber', initials:'SW' },
+  'cc@mitarbeiter.com': { h:'040fc1b1a79f552e1d0f51b75a186548c7aeced36ac64cba7f281f1be62a0f7a', name:'Carlo C.',       role:'admin',   initials:'CC' },
+  'js@mitarbeiter.com': { h:'040fc1b1a79f552e1d0f51b75a186548c7aeced36ac64cba7f281f1be62a0f7a', name:'Jean S.',        role:'admin',   initials:'JS' },
+};
+if (localStorage.getItem('mcom_auth')) location.href = 'index.html';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function doLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim().toLowerCase();
+  const pw    = document.getElementById('pw').value;
+  const btn   = document.getElementById('btn');
+  const err   = document.getElementById('error');
+  btn.disabled = true; btn.textContent = 'Prüfe…'; err.style.display = 'none';
+  const h = await sha256(pw);
+  const u = USERS[email];
+  if (u && u.h === h) {
+    const { h: _, ...safe } = u;
+    localStorage.setItem('mcom_auth', JSON.stringify({ email, ...safe, ts: Date.now() }));
+    location.href = 'index.html';
+  } else {
+    err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Anmelden';
+    document.getElementById('pw').value = '';
+    document.getElementById('pw').focus();
+  }
+}
+function togglePw() {
+  const p = document.getElementById('pw');
+  p.type = p.type === 'password' ? 'text' : 'password';
+}
+
+// ── CUSTOM CURSOR ──
+const dot  = document.getElementById('cursor-dot');
+const ring = document.getElementById('cursor-ring');
+let mx=0, my=0, rx=0, ry=0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  dot.style.left = mx+'px'; dot.style.top = my+'px';
+});
+(function lerpCursor(){
+  rx += (mx-rx)*.12; ry += (my-ry)*.12;
+  ring.style.left = rx+'px'; ring.style.top = ry+'px';
+  requestAnimationFrame(lerpCursor);
+})();
+document.querySelectorAll('a,button,.btn,.eye').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('cur-hover'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('cur-hover'));
+});
+document.addEventListener('mouseleave', () => { dot.style.opacity='0'; ring.style.opacity='0'; });
+document.addEventListener('mouseenter', () => { dot.style.opacity='1'; ring.style.opacity='1'; });
+
+// ── PARTICLE FIELD ──
+(function(){
+  const canvas = document.getElementById('hero-canvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, mouse = { x:-999, y:-999 };
+  const COUNT = 80;
+  const pts   = [];
+
+  function resize(){
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Pt {
+    constructor(){ this.reset(true); }
+    reset(init){
+      this.x = Math.random()*W;
+      this.y = init ? Math.random()*H : H+10;
+      this.vx = (Math.random()-.5)*.3;
+      this.vy = -Math.random()*.45-.1;
+      this.r  = Math.random()*1.8+.4;
+      this.alpha = Math.random()*.5+.1;
+      this.life = 0;
+      this.maxLife = Math.random()*400+200;
+    }
+    update(){
+      const dx = this.x-mouse.x, dy = this.y-mouse.y;
+      const d  = Math.sqrt(dx*dx+dy*dy);
+      if(d<130){ const f=(130-d)/130*.7; this.vx+=dx/d*f; this.vy+=dy/d*f; }
+      this.vx*=.98; this.vy*=.98;
+      this.x+=this.vx; this.y+=this.vy;
+      this.life++;
+      if(this.life>this.maxLife||this.y<-10) this.reset(false);
+    }
+    draw(){
+      const a = this.alpha*(1-this.life/this.maxLife);
+      ctx.beginPath();
+      ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(0,170,238,${a})`;
+      ctx.fill();
+    }
+  }
+
+  function drawLines(){
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<115){
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x,pts[i].y);
+          ctx.lineTo(pts[j].x,pts[j].y);
+          ctx.strokeStyle=`rgba(0,170,238,${(1-d/115)*.11})`;
+          ctx.lineWidth=.5;
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  for(let i=0;i<COUNT;i++) pts.push(new Pt());
+
+  (function animate(){
+    ctx.clearRect(0,0,W,H);
+    drawLines();
+    pts.forEach(p=>{p.update();p.draw();});
+    requestAnimationFrame(animate);
+  })();
+
+  document.addEventListener('mousemove', e => {
+    mouse.x = e.clientX; mouse.y = e.clientY;
+  });
+  document.addEventListener('mouseleave', () => { mouse.x=-999; mouse.y=-999; });
+})();
+</script>
+</body>
+</html>

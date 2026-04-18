@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Niggehoff Training — mitarbeiter.com</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bd:#060f1c; --bm:#0D1F35; --bl:#132B47; --bb:#00AAEE; --bb2:#0088CC;
+    --acc:#00AAEE; --acc-l:rgba(0,170,238,.08); --acc-d:#0088CC;
+    --bg:#f0f4f8; --wh:#fff; --border:#dde3ec;
+    --sb-bg:#0D1F35; --sb-border:rgba(255,255,255,.07);
+    --sb-text:rgba(255,255,255,.62); --sb-text-h:#fff;
+    --text:#111827; --muted:#6b7280; --sidebar-w:288px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);
+    display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+
+  /* ── TOP NAV ── */
+  #topnav{
+    height:54px;background:var(--bd);display:flex;align-items:center;
+    padding:0 18px;gap:12px;flex-shrink:0;
+    border-bottom:1px solid rgba(255,255,255,.08);z-index:200;
+  }
+  .nav-logo img{height:26px;object-fit:contain;display:block;}
+
+  .nav-divider{width:1px;height:24px;background:rgba(255,255,255,.15);flex-shrink:0;}
+
+  /* Course/module switcher pill */
+  .course-switcher{position:relative;}
+  .cs-btn{
+    display:flex;align-items:center;gap:8px;padding:6px 14px;
+    background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+    border-radius:8px;cursor:pointer;color:#fff;font-family:'Manrope',sans-serif;
+    font-size:12px;font-weight:700;transition:all .15s;white-space:nowrap;
+  }
+  .cs-btn:hover{background:rgba(255,255,255,.16);}
+  .cs-dot{width:7px;height:7px;border-radius:50%;background:var(--bb);flex-shrink:0;}
+  .cs-chevron{font-size:9px;color:rgba(255,255,255,.5);margin-left:2px;}
+  .cs-dropdown{
+    position:absolute;top:calc(100% + 6px);left:0;min-width:220px;
+    background:var(--wh);border:1px solid var(--border);border-radius:12px;
+    box-shadow:0 12px 40px rgba(0,0,0,.15);z-index:300;display:none;overflow:hidden;
+  }
+  .cs-dropdown.open{display:block;}
+  .cs-item{
+    padding:11px 16px;cursor:pointer;font-size:13px;color:var(--text);
+    display:flex;align-items:center;gap:10px;transition:background .12s;
+    border-bottom:1px solid var(--border);
+  }
+  .cs-item:last-child{border-bottom:none;}
+  .cs-item:hover{background:var(--bg);}
+  .cs-item.active{color:var(--acc);font-weight:700;}
+  .cs-item .ci-dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0;}
+  .cs-item.active .ci-dot{background:var(--acc);}
+  .cs-head{padding:8px 16px;font-size:10px;font-weight:700;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.06em;background:var(--bg);}
+
+  .nav-spacer{flex:1;}
+
+  /* Search */
+  .search-wrap{position:relative;}
+  .search-icon-el{position:absolute;left:11px;top:50%;transform:translateY(-50%);
+    font-size:12px;pointer-events:none;}
+  #search{
+    padding:7px 14px 7px 34px;background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.15);border-radius:8px;
+    color:#fff;font-family:'Manrope',sans-serif;font-size:12px;outline:none;
+    width:200px;transition:all .2s;
+  }
+  #search::placeholder{color:rgba(255,255,255,.38);}
+  #search:focus{background:rgba(255,255,255,.15);border-color:var(--bb);width:260px;}
+  #sr{
+    position:absolute;top:calc(100% + 6px);right:0;width:360px;
+    background:var(--wh);border:1px solid var(--border);border-radius:12px;
+    box-shadow:0 12px 40px rgba(0,0,0,.15);max-height:360px;overflow-y:auto;
+    z-index:300;display:none;
+  }
+  .sr-item{padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);}
+  .sr-item:last-child{border-bottom:none;}
+  .sr-item:hover{background:var(--bg);}
+  .sr-course{font-size:10px;font-weight:700;color:var(--acc);text-transform:uppercase;
+    letter-spacing:.04em;margin-bottom:2px;}
+  .sr-title{font-size:13px;font-weight:600;}
+  .sr-snip{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5;}
+  mark{background:rgba(0,170,238,.18);color:#0088CC;border-radius:2px;padding:0 1px;}
+
+  /* User menu */
+  .user-menu{position:relative;}
+  .um-btn{
+    display:flex;align-items:center;gap:8px;padding:5px 10px;
+    border-radius:8px;cursor:pointer;transition:background .15s;
+  }
+  .um-btn:hover{background:rgba(255,255,255,.1);}
+  .um-avatar{
+    width:30px;height:30px;border-radius:50%;background:var(--bb);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:800;color:#fff;flex-shrink:0;
+  }
+  .um-info{display:flex;flex-direction:column;}
+  .um-name{font-size:12px;font-weight:700;color:#fff;line-height:1.2;}
+  .um-role{font-size:10px;color:rgba(255,255,255,.45);}
+  .um-chevron{font-size:9px;color:rgba(255,255,255,.4);}
+  .um-dropdown{
+    position:absolute;top:calc(100% + 6px);right:0;width:200px;
+    background:var(--wh);border:1px solid var(--border);border-radius:12px;
+    box-shadow:0 12px 40px rgba(0,0,0,.15);z-index:300;display:none;overflow:hidden;
+  }
+  .um-dropdown.open{display:block;}
+  .um-header{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--bg);}
+  .um-header-name{font-size:13px;font-weight:700;color:var(--text);}
+  .um-header-email{font-size:11px;color:var(--muted);margin-top:2px;}
+  .um-header-badge{
+    display:inline-block;margin-top:6px;padding:2px 8px;
+    border-radius:20px;font-size:10px;font-weight:700;
+  }
+  .badge-inhaber{background:#fef3c7;color:#92400e;}
+  .badge-admin{background:#dbeafe;color:#1e40af;}
+  .um-item{
+    padding:10px 16px;cursor:pointer;font-size:13px;color:var(--text);
+    display:flex;align-items:center;gap:9px;transition:background .12s;
+    border-bottom:1px solid var(--border);
+  }
+  .um-item:last-child{border-bottom:none;}
+  .um-item:hover{background:var(--bg);}
+  .um-item.danger{color:#ef4444;}
+
+  /* ── LAYOUT ── */
+  #layout{display:flex;flex:1;overflow:hidden;}
+
+  /* ── SIDEBAR ── */
+  #sidebar{
+    width:var(--sidebar-w);background:var(--sb-bg);border-right:1px solid var(--sb-border);
+    display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;
+  }
+  .sb-header{
+    padding:12px 16px;border-bottom:1px solid var(--sb-border);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .sb-course-name{font-size:12px;font-weight:800;color:#fff;}
+  .sb-count{font-size:10px;color:rgba(255,255,255,.35);}
+  #course-list{overflow-y:auto;flex:1;padding:4px 0;}
+  #course-list::-webkit-scrollbar{width:3px;}
+  #course-list::-webkit-scrollbar-track{background:transparent;}
+  #course-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:2px;}
+
+  .course-section{border-bottom:1px solid var(--sb-border);}
+  .course-header{
+    padding:10px 16px;cursor:pointer;display:flex;align-items:center;
+    gap:8px;font-size:12px;font-weight:700;color:var(--sb-text);user-select:none;
+    transition:background .12s,color .12s;
+  }
+  .course-header:hover{background:rgba(255,255,255,.05);color:var(--sb-text-h);}
+  .ch-chevron{font-size:9px;color:rgba(255,255,255,.3);transition:transform .18s;flex-shrink:0;}
+  .course-header.open .ch-chevron{transform:rotate(90deg);}
+  .ch-count{font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;
+    background:rgba(255,255,255,.07);padding:2px 7px;border-radius:20px;}
+  .chapter-group{display:none;}
+  .chapter-group.open{display:block;}
+  .ch-label{padding:8px 16px 3px 28px;font-size:10px;font-weight:700;
+    color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.05em;}
+  .lesson-item{
+    padding:7px 16px 7px 28px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.5);
+    display:flex;align-items:center;gap:7px;transition:all .12s;line-height:1.4;
+  }
+  .lesson-item:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85);}
+  .lesson-item.active{background:rgba(0,170,238,.12);color:var(--bb);
+    border-right:3px solid var(--bb);font-weight:600;}
+  .li-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.18);flex-shrink:0;}
+  .lesson-item.has-video .li-dot{background:#22c55e;}
+  .lesson-item.active .li-dot{background:var(--bb);}
+
+  /* ── MAIN ── */
+  #main{flex:1;overflow-y:auto;background:var(--bg);}
+
+  /* WELCOME */
+  #welcome{padding:44px;}
+  .wg{font-size:22px;font-weight:800;color:var(--bd);margin-bottom:4px;}
+  .ws{font-size:14px;color:var(--muted);margin-bottom:36px;}
+  .stats-row{display:flex;gap:14px;margin-bottom:36px;flex-wrap:wrap;}
+  .stat-card{background:var(--wh);border:1px solid var(--border);border-radius:12px;
+    padding:18px 22px;min-width:130px;}
+  .sc-n{font-size:26px;font-weight:800;color:var(--acc);}
+  .sc-l{font-size:11px;color:var(--muted);margin-top:3px;font-weight:600;}
+  .cg-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.06em;margin-bottom:14px;}
+  .course-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;max-width:860px;}
+  .cc{
+    background:var(--wh);border:1px solid var(--border);border-radius:12px;
+    padding:18px;cursor:pointer;transition:all .15s;
+  }
+  .cc:hover{border-color:var(--acc);transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(0,170,238,.12);}
+  .cc-title{font-size:12px;font-weight:700;color:var(--bd);margin-bottom:5px;line-height:1.4;}
+  .cc-meta{font-size:11px;color:var(--muted);}
+  .cc-badge{margin-top:10px;display:inline-block;padding:3px 10px;
+    background:var(--acc-l);color:var(--acc);border-radius:20px;
+    font-size:10px;font-weight:700;}
+  .cc.soon{cursor:default;opacity:.72;border-style:dashed;}
+  .cc.soon:hover{transform:none;box-shadow:none;border-color:var(--border);}
+  .cc-soon-badge{margin-top:10px;display:inline-block;padding:3px 10px;
+    background:rgba(251,191,36,.12);color:#d97706;border-radius:20px;
+    font-size:10px;font-weight:700;letter-spacing:.02em;}
+
+  /* LESSON VIEW */
+  #lesson-view{display:none;padding:26px 30px 36px;}
+  .breadcrumb{font-size:11px;color:var(--muted);margin-bottom:7px;
+    display:flex;align-items:center;gap:5px;}
+  .bc-course{color:var(--acc);font-weight:700;}
+  .bc-sep{color:var(--border);}
+  .lesson-title-h{font-size:19px;font-weight:800;color:var(--bd);
+    margin-bottom:18px;line-height:1.3;}
+
+  .lesson-grid{display:grid;grid-template-columns:1fr 300px;gap:18px;}
+
+  .player-wrap{background:#000;border-radius:14px;overflow:hidden;
+    aspect-ratio:16/9;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+  #vid{width:100%;height:100%;display:block;}
+  .no-video{aspect-ratio:16/9;background:var(--wh);border:1px solid var(--border);
+    border-radius:14px;display:flex;align-items:center;justify-content:center;
+    color:var(--muted);font-size:13px;gap:8px;}
+
+  .transcript-card{background:var(--wh);border:1px solid var(--border);
+    border-radius:14px;padding:16px;overflow-y:auto;max-height:400px;}
+  .panel-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.06em;margin-bottom:10px;}
+  #transcript-text{font-size:12px;color:var(--muted);line-height:1.75;}
+
+  /* Materials bar — sits directly below the player */
+  .materials-bar{display:none;margin-top:12px;padding:12px 14px;
+    background:var(--wh);border:1px solid var(--border);border-radius:12px;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .materials-bar.has-items{display:flex;}
+  .mat-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.06em;white-space:nowrap;margin-right:4px;}
+  .mat-item{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;
+    background:var(--acc-l);border:1px solid rgba(0,170,238,.18);border-radius:8px;
+    text-decoration:none;color:var(--acc-d);font-size:12px;font-weight:600;
+    transition:all .12s;white-space:nowrap;}
+  .mat-item:hover{background:var(--acc);color:#fff;border-color:var(--acc);}
+  .mat-ext{font-size:10px;opacity:.7;}
+
+  .lesson-nav{display:flex;gap:10px;margin-top:18px;}
+  .nav-btn{padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;
+    cursor:pointer;border:1px solid var(--border);background:var(--wh);
+    color:var(--text);font-family:'Manrope',sans-serif;transition:all .12s;}
+  .nav-btn:hover{background:var(--bg);}
+  .nav-btn.primary{background:var(--acc);border-color:var(--acc);color:#fff;}
+  .nav-btn.primary:hover{background:var(--acc-d);}
+
+  /* PROFILE MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);
+    z-index:500;display:none;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--wh);border-radius:20px;padding:32px;width:100%;
+    max-width:460px;box-shadow:0 24px 64px rgba(0,0,0,.2);}
+  .modal h2{font-size:18px;font-weight:800;color:var(--bd);margin-bottom:20px;}
+  .modal-avatar{width:72px;height:72px;border-radius:50%;background:var(--bb);
+    display:flex;align-items:center;justify-content:center;font-size:24px;
+    font-weight:800;color:#fff;margin:0 auto 20px;}
+  .modal label{display:block;font-size:11px;font-weight:700;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+  .modal input{width:100%;padding:10px 14px;border:1px solid var(--border);
+    border-radius:8px;font-family:'Manrope',sans-serif;font-size:13px;
+    color:var(--text);outline:none;margin-bottom:14px;}
+  .modal input:focus{border-color:var(--bb);}
+  .modal input[disabled]{background:var(--bg);color:var(--muted);}
+  .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;}
+  .btn-cancel{padding:9px 18px;border-radius:8px;border:1px solid var(--border);
+    background:var(--wh);color:var(--text);cursor:pointer;font-family:'Manrope',sans-serif;
+    font-size:13px;font-weight:600;transition:all .12s;}
+  .btn-cancel:hover{background:var(--bg);}
+  .btn-save{padding:9px 20px;border-radius:8px;border:none;background:var(--bb);
+    color:#fff;cursor:pointer;font-family:'Manrope',sans-serif;font-size:13px;
+    font-weight:700;transition:all .12s;}
+  .btn-save:hover{background:#1bbfff;}
+  .role-badge{display:inline-block;padding:4px 12px;border-radius:20px;
+    font-size:11px;font-weight:700;margin-bottom:18px;}
+
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav id="topnav">
+  <div class="nav-logo">
+    <img src="logo-light.png" alt="mitarbeiter.com">
+  </div>
+  <div class="nav-divider"></div>
+
+  <!-- Course/Module Switcher -->
+  <div class="course-switcher" id="cs">
+    <div class="cs-btn" onclick="toggleDropdown('cs-dd')">
+      <span class="cs-dot"></span>
+      <span id="cs-label">Niggehoff Training</span>
+      <span class="cs-chevron">▼</span>
+    </div>
+    <div class="cs-dropdown" id="cs-dd">
+      <div class="cs-head">Verfügbare Module</div>
+      <div class="cs-item active" onclick="selectModule('Niggehoff Training','cs-dd')">
+        <span class="ci-dot"></span>Niggehoff Training
+      </div>
+      <div class="cs-item" onclick="alert('Weitere Module folgen.')">
+        <span class="ci-dot"></span>+ Weiteres Modul hinzufügen
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-spacer"></div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <span class="search-icon-el">🔍</span>
+    <input id="search" type="text" placeholder="Transkripte durchsuchen…" autocomplete="off">
+    <div id="sr"></div>
+  </div>
+
+  <!-- User Menu -->
+  <div class="user-menu" id="um">
+    <div class="um-btn" onclick="toggleDropdown('um-dd')">
+      <div class="um-avatar" id="um-avatar">?</div>
+      <div class="um-info">
+        <div class="um-name" id="um-name">–</div>
+        <div class="um-role" id="um-role">–</div>
+      </div>
+      <span class="um-chevron">▼</span>
+    </div>
+    <div class="um-dropdown" id="um-dd">
+      <div class="um-header">
+        <div class="um-header-name" id="dd-name">–</div>
+        <div class="um-header-email" id="dd-email">–</div>
+        <span class="um-header-badge" id="dd-badge">–</span>
+      </div>
+      <div class="um-item" onclick="openProfile()">👤 Profil bearbeiten</div>
+      <div class="um-item danger" onclick="logout()">↩ Abmelden</div>
+    </div>
+  </div>
+</nav>
+
+<div id="layout">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-header">
+      <div class="sb-course-name" id="sb-course-name">Niggehoff Training</div>
+      <div class="sb-count" id="sb-count"></div>
+    </div>
+    <div id="course-list"></div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="welcome"></div>
+    <div id="lesson-view">
+      <div class="breadcrumb">
+        <span class="bc-course" id="bc-course"></span>
+        <span class="bc-sep">›</span>
+        <span id="bc-chapter"></span>
+      </div>
+      <div class="lesson-title-h" id="lesson-title"></div>
+      <div class="lesson-grid">
+        <div>
+          <div id="player-container"></div>
+          <div id="materials-bar" class="materials-bar">
+            <span class="mat-label">📎 Downloads</span>
+            <div id="materials-list" style="display:contents"></div>
+          </div>
+        </div>
+        <div>
+          <div class="transcript-card">
+            <div class="panel-title">Transkript</div>
+            <div id="transcript-text">Kein Transkript verfügbar.</div>
+          </div>
+        </div>
+      </div>
+      <div class="lesson-nav">
+        <button class="nav-btn" onclick="navigate(-1)">← Zurück</button>
+        <button class="nav-btn primary" onclick="navigate(1)">Weiter →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal">
+    <h2>Mein Profil</h2>
+    <div class="modal-avatar" id="p-avatar">?</div>
+    <span class="role-badge" id="p-badge">–</span>
+    <div>
+      <label>Name</label>
+      <input type="text" id="p-name" placeholder="Dein Name">
+      <label>E-Mail</label>
+      <input type="email" id="p-email" disabled>
+      <label>Passwort ändern</label>
+      <input type="password" id="p-pw" placeholder="Neues Passwort (optional)">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeProfile()">Abbrechen</button>
+      <button class="btn-save" onclick="saveProfile()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<audio id="aud"></audio>
+
+<script>
+// ── AUTH ──────────────────────────────────────────────────
+let auth = JSON.parse(localStorage.getItem('mcom_auth') || 'null');
+if (!auth) { location.href = 'login.html'; }
+
+const ROLE_LABELS = { inhaber: 'Inhaber', admin: 'Admin' };
+const ROLE_COLORS = { inhaber: 'badge-inhaber', admin: 'badge-admin' };
+
+function applyAuth() {
+  document.getElementById('um-avatar').textContent = auth.initials || auth.name.slice(0,2).toUpperCase();
+  document.getElementById('um-name').textContent   = auth.name;
+  document.getElementById('um-role').textContent   = ROLE_LABELS[auth.role] || auth.role;
+  document.getElementById('dd-name').textContent   = auth.name;
+  document.getElementById('dd-email').textContent  = auth.email;
+  const badge = document.getElementById('dd-badge');
+  badge.textContent = ROLE_LABELS[auth.role] || auth.role;
+  badge.className   = 'um-header-badge ' + (ROLE_COLORS[auth.role] || '');
+}
+applyAuth();
+
+function logout() { localStorage.removeItem('mcom_auth'); location.href = 'login.html'; }
+
+// ── DROPDOWNS ─────────────────────────────────────────────
+function toggleDropdown(id) {
+  const el = document.getElementById(id);
+  const isOpen = el.classList.contains('open');
+  document.querySelectorAll('.cs-dropdown,.um-dropdown').forEach(d => d.classList.remove('open'));
+  if (!isOpen) el.classList.add('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.course-switcher') && !e.target.closest('.user-menu'))
+    document.querySelectorAll('.cs-dropdown,.um-dropdown').forEach(d => d.classList.remove('open'));
+});
+
+function selectModule(name, ddId) {
+  document.getElementById('cs-label').textContent = name;
+  document.getElementById('cs-dd').classList.remove('open');
+  document.getElementById('sb-course-name').textContent = name;
+}
+
+// ── PROFILE ───────────────────────────────────────────────
+function openProfile() {
+  document.getElementById('um-dd').classList.remove('open');
+  document.getElementById('p-avatar').textContent = auth.initials || auth.name.slice(0,2).toUpperCase();
+  document.getElementById('p-name').value  = auth.name;
+  document.getElementById('p-email').value = auth.email;
+  document.getElementById('p-pw').value    = '';
+  const b = document.getElementById('p-badge');
+  b.textContent = ROLE_LABELS[auth.role]; b.className = 'role-badge ' + ROLE_COLORS[auth.role];
+  document.getElementById('profile-modal').classList.add('open');
+}
+function closeProfile() { document.getElementById('profile-modal').classList.remove('open'); }
+function saveProfile() {
+  const name = document.getElementById('p-name').value.trim();
+  if (name) {
+    auth.name = name;
+    auth.initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    localStorage.setItem('mcom_auth', JSON.stringify(auth));
+    applyAuth();
+  }
+  closeProfile();
+}
+document.getElementById('profile-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('profile-modal')) closeProfile();
+});
+
+// ── DATA ──────────────────────────────────────────────────
+let COURSES=[], allLessons=[], searchIdx=[], currentLesson=null;
+
+fetch('courses.json')
+  .then(r=>r.json())
+  .then(data=>{ COURSES=data; buildSidebar(); buildWelcome(); buildSearchIdx(); })
+  .catch(()=>{
+    document.getElementById('welcome').innerHTML =
+      `<div style="padding:44px;color:#ef4444;font-size:14px">
+        <strong>courses.json nicht gefunden.</strong><br>
+        Starte den Server mit: <code>python3 server.py</code>
+      </div>`;
+  });
+
+// ── WELCOME ───────────────────────────────────────────────
+function buildWelcome() {
+  const total = COURSES.reduce((a,c)=>a+c.chapters.reduce((b,ch)=>b+ch.lessons.length,0),0);
+  const vids  = COURSES.reduce((a,c)=>a+c.chapters.reduce((b,ch)=>b+ch.lessons.filter(l=>l.video_url||l.hls_url).length,0),0);
+  const vtts  = COURSES.reduce((a,c)=>a+c.chapters.reduce((b,ch)=>b+ch.lessons.filter(l=>l.vtt_url).length,0),0);
+  document.getElementById('sb-count').textContent = total + ' Lektionen';
+
+  document.getElementById('welcome').innerHTML = `
+    <div class="wg">Hallo ${auth.name.split(' ')[0]} 👋</div>
+    <p class="ws">Willkommen im Niggehoff Training — ${COURSES.length} Kurse verfügbar.</p>
+    <div class="stats-row">
+      <div class="stat-card"><div class="sc-n">${COURSES.length}</div><div class="sc-l">Kurse</div></div>
+      <div class="stat-card"><div class="sc-n">${total}</div><div class="sc-l">Lektionen</div></div>
+      <div class="stat-card"><div class="sc-n">${vids}</div><div class="sc-l">mit Video</div></div>
+      <div class="stat-card"><div class="sc-n">${vtts}</div><div class="sc-l">mit Transkript</div></div>
+    </div>
+    <div class="cg-title">Alle Kurse</div>
+    <div class="course-grid">
+      ${COURSES.map((c,i)=>{
+        const n=c.chapters.reduce((a,ch)=>a+ch.lessons.length,0);
+        return `<div class="cc" onclick="openCourse(${i})">
+          <div class="cc-title">${c.title}</div>
+          <div class="cc-meta">${c.chapters.length} Kapitel</div>
+          <div class="cc-badge">${n} Lektionen</div>
+        </div>`;
+      }).join('')}
+      <div class="cc soon">
+        <div class="cc-title">Limbeck — VERKAUFEN</div>
+        <div class="cc-meta">Martin Limbeck Sales-Training</div>
+        <div class="cc-soon-badge">Coming Soon</div>
+      </div>
+      <div class="cc soon">
+        <div class="cc-title">Baulig Excellence</div>
+        <div class="cc-meta">Consulting & Skalierung</div>
+        <div class="cc-soon-badge">Coming Soon</div>
+      </div>
+    </div>
+  `;
+}
+
+function openCourse(i) {
+  const sec = document.querySelectorAll('.course-section')[i];
+  const hdr = sec?.querySelector('.course-header');
+  const grp = sec?.querySelector('.chapter-group');
+  if (hdr && grp) { hdr.classList.add('open'); grp.classList.add('open'); sec.scrollIntoView({block:'start',behavior:'smooth'}); }
+}
+
+// ── SIDEBAR ───────────────────────────────────────────────
+function buildSidebar() {
+  const list = document.getElementById('course-list');
+  list.innerHTML = ''; allLessons = [];
+  COURSES.forEach((course,ci)=>{
+    const sec = document.createElement('div'); sec.className='course-section';
+    const total = course.chapters.reduce((a,ch)=>a+ch.lessons.length,0);
+    const hdr = document.createElement('div'); hdr.className='course-header';
+    hdr.innerHTML=`<span class="ch-chevron">▶</span>
+      <span style="flex:1;line-height:1.3">${course.title}</span>
+      <span class="ch-count">${total}</span>`;
+    const grp = document.createElement('div'); grp.className='chapter-group';
+    hdr.onclick=()=>{ hdr.classList.toggle('open'); grp.classList.toggle('open'); };
+    course.chapters.forEach((ch,chi)=>{
+      if(course.chapters.length>1){
+        const lbl=document.createElement('div'); lbl.className='ch-label'; lbl.textContent=ch.title; grp.appendChild(lbl);
+      }
+      ch.lessons.forEach((lesson,li)=>{
+        const item=document.createElement('div');
+        item.className='lesson-item'+((lesson.video_url||lesson.hls_url)?' has-video':'');
+        item.innerHTML=`<span class="li-dot"></span><span>${lesson.title}</span>`;
+        item.onclick=()=>loadLesson(lesson,item,course,ch);
+        grp.appendChild(item);
+        allLessons.push({lesson,item,course,chapter:ch});
+      });
+    });
+    sec.appendChild(hdr); sec.appendChild(grp); list.appendChild(sec);
+  });
+}
+
+// ── SEARCH ────────────────────────────────────────────────
+function buildSearchIdx() {
+  COURSES.forEach(c=>c.chapters.forEach(ch=>ch.lessons.forEach(l=>{
+    if(l.transcript) searchIdx.push({lesson:l,course:c,chapter:ch,t:l.transcript.toLowerCase()});
+  })));
+}
+const searchEl=document.getElementById('search'), srEl=document.getElementById('sr');
+searchEl.addEventListener('input',()=>{
+  const q=searchEl.value.trim().toLowerCase();
+  if(q.length<3){srEl.style.display='none';return;}
+  const hits=searchIdx.filter(e=>e.t.includes(q)).slice(0,15);
+  if(!hits.length){srEl.style.display='none';return;}
+  srEl.innerHTML=hits.map((h,i)=>{
+    const idx=h.t.indexOf(q);
+    const raw=h.lesson.transcript.substring(Math.max(0,idx-40),idx+80);
+    const snip=raw.replace(new RegExp(q,'gi'),m=>`<mark>${m}</mark>`);
+    return `<div class="sr-item" data-i="${i}">
+      <div class="sr-course">${h.course.title}</div>
+      <div class="sr-title">${h.lesson.title}</div>
+      <div class="sr-snip">…${snip}…</div>
+    </div>`;
+  }).join('');
+  srEl.querySelectorAll('.sr-item').forEach((el,i)=>{
+    el.onclick=()=>{
+      const h=hits[i];
+      const found=allLessons.find(e=>e.lesson===h.lesson);
+      if(found){openCourse(COURSES.indexOf(h.course));loadLesson(found.lesson,found.item,found.course,found.chapter);}
+      srEl.style.display='none'; searchEl.value='';
+    };
+  });
+  srEl.style.display='block';
+});
+document.addEventListener('click',e=>{ if(!e.target.closest('.search-wrap')) srEl.style.display='none'; });
+
+// ── LOAD LESSON ───────────────────────────────────────────
+function loadLesson(lesson,itemEl,course,chapter) {
+  document.querySelectorAll('.lesson-item').forEach(e=>e.classList.remove('active'));
+  itemEl.classList.add('active'); itemEl.scrollIntoView({block:'nearest'});
+  currentLesson={lesson,item:itemEl,course,chapter};
+
+  document.getElementById('welcome').style.display='none';
+  document.getElementById('lesson-view').style.display='block';
+  document.getElementById('bc-course').textContent=course.title;
+  document.getElementById('bc-chapter').textContent=chapter.title;
+  document.getElementById('lesson-title').textContent=lesson.title;
+
+  const aud=document.getElementById('aud');
+  const container=document.getElementById('player-container');
+
+  const hasVideo = lesson.video_url || lesson.hls_url || lesson.audio_url;
+  if(hasVideo){
+    const posterAttr = lesson.img_url ? `poster="${lesson.img_url}"` : '';
+    const trackEl    = lesson.vtt_url  ? `<track kind="subtitles" src="${lesson.vtt_url}" srclang="de" label="Deutsch" default>` : '';
+    container.innerHTML=`<div class="player-wrap">
+      <video id="vid" controls crossorigin="anonymous" ${posterAttr}
+        style="width:100%;height:100%;display:block;">${trackEl}</video>
+    </div>`;
+    const v = document.getElementById('vid');
+
+    if(lesson.hls_url){
+      // HLS stream (Pro Training)
+      if(Hls.isSupported()){
+        const hls = new Hls();
+        hls.loadSource(lesson.hls_url);
+        hls.attachMedia(v);
+      } else if(v.canPlayType('application/vnd.apple.mpegurl')){
+        v.src = lesson.hls_url; // Safari native HLS
+      }
+      aud.src=''; aud.load();
+    } else if(lesson.video_url){
+      // Separate DASH video + audio tracks
+      v.src = lesson.video_url;
+      if(lesson.audio_url){
+        aud.src=lesson.audio_url;
+        aud.load();
+        aud.volume=1.0;
+        aud.muted=false;
+        v.addEventListener('play',()=>{aud.currentTime=v.currentTime;aud.play().catch(()=>{});});
+        v.addEventListener('pause',()=>aud.pause());
+        v.addEventListener('seeked',()=>{aud.currentTime=v.currentTime;if(!v.paused){aud.play().catch(()=>{});}});
+        v.addEventListener('ratechange',()=>{aud.playbackRate=v.playbackRate;});
+        v.addEventListener('volumechange',()=>{aud.muted=v.muted;});
+      } else { aud.src=''; aud.load(); }
+    }
+  } else {
+    container.innerHTML=`<div class="no-video">🎬 Kein Video verfügbar</div>`;
+    aud.src=''; aud.load();
+  }
+
+  const tEl=document.getElementById('transcript-text');
+  if(lesson.transcript){tEl.textContent=lesson.transcript;}
+  else if(lesson.vtt_url){
+    tEl.innerHTML='<span style="color:var(--muted)">Lade Transkript…</span>';
+    fetch(lesson.vtt_url).then(r=>r.text()).then(vtt=>{
+      tEl.textContent=vtt.replace(/WEBVTT[\s\S]*?\n\n/,'')
+        .replace(/\d{2}:\d{2}[\d:.,]+ --> [\d:.,]+\s*\n/g,'')
+        .replace(/<[^>]+>/g,'').replace(/\n+/g,' ').trim();
+    }).catch(()=>{tEl.textContent='Transkript nicht ladbar.';});
+  } else {tEl.textContent='Kein Transkript verfügbar.';}
+
+  const mb=document.getElementById('materials-bar');
+  const ml=document.getElementById('materials-list');
+  if(lesson.materials?.length){
+    mb.classList.add('has-items');
+    ml.innerHTML=lesson.materials.map(m=>{
+      const ext=m.name.split('.').pop().toUpperCase();
+      const icon=ext==='PDF'?'📄':ext.includes('PPT')?'📊':'📁';
+      const label=m.name.replace(/\.[^.]+$/,'').replace(/_/g,' ');
+      return `<a class="mat-item" href="Kurs/${m.path}" target="_blank" download>
+        <span>${icon}</span><span>${label}</span><span class="mat-ext">${ext}</span>
+      </a>`;
+    }).join('');
+  } else { mb.classList.remove('has-items'); ml.innerHTML=''; }
+  window.scrollTo(0,0);
+}
+
+function navigate(dir){
+  if(!currentLesson)return;
+  const idx=allLessons.findIndex(e=>e.lesson===currentLesson.lesson);
+  const next=allLessons[idx+dir];
+  if(next)loadLesson(next.lesson,next.item,next.course,next.chapter);
+}
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  if(e.key==='ArrowRight')navigate(1);
+  if(e.key==='ArrowLeft')navigate(-1);
+});
+</script>
+</body>
+</html>
