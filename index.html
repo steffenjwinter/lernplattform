@@ -161,7 +161,10 @@
   .chapter-group{display:none;}
   .chapter-group.open{display:block;}
   .ch-label{padding:8px 16px 3px 28px;font-size:10px;font-weight:700;
-    color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.05em;}
+    color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.05em;
+    display:flex;align-items:center;gap:4px;}
+  .ch-label[onclick]{cursor:pointer;transition:color .15s;}
+  .ch-label[onclick]:hover{color:rgba(0,170,238,.7);}
   .lesson-item{
     padding:7px 16px 7px 28px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.5);
     display:flex;align-items:center;gap:7px;transition:all .12s;line-height:1.4;
@@ -295,6 +298,20 @@
     padding:1px 5px;background:rgba(0,170,238,.12);border-radius:10px;transition:background .12s;}
   .concept-chip a:hover{background:rgba(0,170,238,.25);}
 
+  /* Chapter summary view */
+  .chapter-view-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:-.02em;}
+  .chapter-view-course{font-size:12px;color:var(--muted);margin-bottom:24px;text-transform:uppercase;letter-spacing:.06em;}
+  .chapter-view-bullets{list-style:none;padding:0;margin:0 0 20px 0;}
+  .chapter-view-bullets li{font-size:13.5px;color:var(--muted2);padding:6px 0 6px 20px;border-bottom:1px solid var(--border);position:relative;line-height:1.5;}
+  .chapter-view-bullets li::before{content:"›";position:absolute;left:4px;color:var(--bb);font-weight:700;}
+  .chapter-view-takeaways{margin-bottom:20px;}
+  .chapter-view-takeaways .kt-item{background:rgba(22,163,74,.07);border-left:3px solid #16a34a;border-radius:0 8px 8px 0;padding:8px 14px;font-size:12.5px;color:var(--muted2);margin-bottom:7px;font-style:italic;}
+  .chapter-concepts-cloud{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px;}
+  .chapter-concept-tag{background:rgba(0,170,238,.08);border:1px solid rgba(0,170,238,.2);border-radius:6px;padding:3px 9px;font-size:11px;font-weight:600;color:var(--bb);letter-spacing:.03em;}
+  .chapter-lessons-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:24px;}
+  .chapter-lesson-chip{background:var(--wh);border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:11.5px;color:var(--muted2);cursor:pointer;transition:border-color .15s,background .15s;display:flex;align-items:center;gap:6px;}
+  .chapter-lesson-chip:hover{border-color:var(--bb);background:rgba(0,170,238,.05);color:var(--text);}
+  .chapter-section-hdr{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin:20px 0 10px;}
   /* Inline summary under video */
   .inline-summary{margin-top:12px;background:var(--wh);border:1px solid var(--border);
     border-radius:12px;padding:14px 16px;}
@@ -551,6 +568,7 @@
   <!-- MAIN -->
   <div id="main">
     <div id="welcome"></div>
+    <div id="chapter-view" style="display:none;padding:32px 36px;max-width:860px"></div>
     <div id="lesson-view">
       <div class="breadcrumb">
         <span class="bc-course" id="bc-course"></span>
@@ -620,6 +638,22 @@
   </div>
 </div>
 
+<!-- TUTORIAL OVERLAY -->
+<div id="tutorial-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(6,15,28,.82);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px">
+  <div id="tutorial-card" style="background:var(--card-bg,#0d1f35);border:1px solid rgba(255,255,255,.1);border-radius:20px;max-width:520px;width:100%;padding:40px 44px;box-shadow:0 24px 60px rgba(0,0,0,.6);position:relative">
+    <div style="position:absolute;top:18px;right:20px;cursor:pointer;font-size:18px;color:rgba(255,255,255,.3)" onclick="closeTutorial()">✕</div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--bb);text-transform:uppercase;margin-bottom:20px">Willkommen in der</div>
+    <div style="font-size:24px;font-weight:700;color:#fff;margin-bottom:6px;letter-spacing:-.02em">mitarbeiter.com KDB</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:32px">Kursdatenbank — dein persönliches Lernzentrum</div>
+    <div id="tutorial-step-content"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:28px">
+      <div id="tutorial-dots" style="display:flex;gap:6px;flex:1"></div>
+      <button id="tutorial-back-btn" onclick="tutorialStep(-1)" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:9px 18px;color:rgba(255,255,255,.5);font-size:13px;font-family:inherit;cursor:pointer;display:none">Zurück</button>
+      <button id="tutorial-next-btn" onclick="tutorialStep(1)" style="background:var(--bb);border:none;border-radius:8px;padding:9px 22px;color:#fff;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer">Weiter →</button>
+    </div>
+  </div>
+</div>
+
 <!-- PROFILE MODAL -->
 <div class="modal-overlay" id="profile-modal">
   <div class="modal">
@@ -641,9 +675,12 @@
         <span class="toggle-slider"></span>
       </label>
     </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeProfile()">Abbrechen</button>
-      <button class="btn-save" onclick="saveProfile()">Speichern</button>
+    <div class="modal-footer" style="flex-direction:column;gap:8px">
+      <div style="display:flex;gap:8px;width:100%">
+        <button class="btn-cancel" onclick="closeProfile()">Abbrechen</button>
+        <button class="btn-save" onclick="saveProfile()">Speichern</button>
+      </div>
+      <button onclick="closeProfile();openTutorial()" style="width:100%;padding:9px;background:rgba(0,170,238,.08);border:1px solid rgba(0,170,238,.2);border-radius:8px;color:var(--bb);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.03em">📖 KDB-Tour erneut starten</button>
     </div>
   </div>
 </div>
@@ -829,12 +866,13 @@ function saveProgressSetting() {
 document.getElementById('profile-modal').addEventListener('click', e => { if (e.target===document.getElementById('profile-modal')) closeProfile(); });
 
 // ── DATA ──────────────────────────────────────────────────
-let COURSES=[], SUMMARIES={}, allLessons=[], searchIdx=[], currentLesson=null;
+let COURSES=[], SUMMARIES={}, CHAPTER_SUMMARIES={}, allLessons=[], searchIdx=[], currentLesson=null;
 function estTime(lesson) {
   if (!lesson.transcript) return null;
   return Math.max(1, Math.round(lesson.transcript.split(/\s+/).length / 130));
 }
 fetch('summaries.json').then(r=>r.json()).then(d=>{ SUMMARIES=d; }).catch(()=>{});
+fetch('chapter_summaries.json').then(r=>r.json()).then(d=>{ CHAPTER_SUMMARIES=d; }).catch(()=>{});
 fetch('courses.json')
   .then(r=>r.json())
   .then(data=>{ COURSES=data; buildSidebar(); buildFavPanel(); buildWelcome(); buildSearchIdx(); })
@@ -935,6 +973,46 @@ function openCourse(i) {
   if (hdr && grp) { hdr.classList.add('open'); grp.classList.add('open'); sec.scrollIntoView({block:'start',behavior:'smooth'}); }
 }
 
+function loadChapterSummary(course, chapter, key) {
+  document.getElementById('welcome').style.display='none';
+  document.getElementById('lesson-view').style.display='none';
+  const cv = document.getElementById('chapter-view');
+  cv.style.display='block';
+  const s = CHAPTER_SUMMARIES[key];
+  if (!s) { cv.innerHTML='<p>Keine Kapitelübersicht verfügbar.</p>'; return; }
+  const bulletsHtml = s.bullets.map(b=>`<li>${b}</li>`).join('');
+  const takeawaysHtml = s.key_takeaways.length
+    ? `<div class="chapter-section-hdr">Key Takeaways</div><div class="chapter-view-takeaways">${s.key_takeaways.map(t=>`<div class="kt-item">„${t}"</div>`).join('')}</div>` : '';
+  const conceptsHtml = s.concepts.length
+    ? `<div class="chapter-section-hdr">Fachbegriffe</div><div class="chapter-concepts-cloud">${s.concepts.map(c=>`<span class="chapter-concept-tag">${c.term}</span>`).join('')}</div>` : '';
+  const lessonsHtml = s.lesson_titles.map((t,i)=>{
+    const lesson = chapter.lessons[i];
+    const entry  = lesson ? allLessons.find(e=>e.lesson===lesson) : null;
+    return `<div class="chapter-lesson-chip" ${entry?`onclick="loadLesson(allLessons.find(e=>e.lesson.id==='${lesson?.id}')?.lesson, allLessons.find(e=>e.lesson.id==='${lesson?.id}')?.item, allLessons.find(e=>e.lesson.id==='${lesson?.id}')?.course, allLessons.find(e=>e.lesson.id==='${lesson?.id}')?.chapter)"`:''}>
+      <span style="color:var(--bb);font-size:10px">▶</span>${t}</div>`;
+  }).join('');
+
+  cv.innerHTML=`
+    <div class="chapter-view-course">${course.title}</div>
+    <div class="chapter-view-title">${chapter.title}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:24px">${s.lesson_count} Lektionen in diesem Kapitel</div>
+    <div class="chapter-section-hdr">Kernaussagen</div>
+    <ul class="chapter-view-bullets">${bulletsHtml}</ul>
+    ${takeawaysHtml}
+    ${conceptsHtml}
+    <div class="chapter-section-hdr">Lektionen in diesem Kapitel</div>
+    <div class="chapter-lessons-grid">${lessonsHtml}</div>
+  `;
+  cv.querySelectorAll('.chapter-lesson-chip').forEach((chip, i) => {
+    const lesson = chapter.lessons[i];
+    if (!lesson) return;
+    chip.onclick = () => {
+      const entry = allLessons.find(e=>e.lesson.id===lesson.id);
+      if (entry) loadLesson(entry.lesson, entry.item, entry.course, entry.chapter);
+    };
+  });
+}
+
 // ── SIDEBAR ───────────────────────────────────────────────
 function buildSidebar() {
   const progress = getSettings().trackProgress ? getProgress() : {};
@@ -949,7 +1027,12 @@ function buildSidebar() {
     hdr.onclick=()=>{ hdr.classList.toggle('open'); grp.classList.toggle('open'); };
     course.chapters.forEach(ch => {
       if (course.chapters.length > 1) {
-        const lbl=document.createElement('div'); lbl.className='ch-label'; lbl.textContent=ch.title; grp.appendChild(lbl);
+        const lbl=document.createElement('div'); lbl.className='ch-label';
+        const key=`${course.id}___${ch.id}`;
+        const hasSumm = !!CHAPTER_SUMMARIES[key];
+        lbl.innerHTML=`<span style="flex:1">${ch.title}</span>${hasSumm?'<span style="font-size:9px;opacity:.45;margin-left:4px">▸ Übersicht</span>':''}`;
+        if (hasSumm) lbl.onclick=(e)=>{ e.stopPropagation(); loadChapterSummary(course,ch,key); };
+        grp.appendChild(lbl);
       }
       ch.lessons.forEach(lesson => {
         const item = document.createElement('div');
@@ -1007,6 +1090,7 @@ function loadLesson(lesson, itemEl, course, chapter) {
   currentLesson = {lesson,item:itemEl,course,chapter};
 
   document.getElementById('welcome').style.display='none';
+  document.getElementById('chapter-view').style.display='none';
   document.getElementById('lesson-view').style.display='block';
   document.getElementById('bc-course').textContent = course.title;
   document.getElementById('bc-chapter').textContent = chapter.title;
@@ -1151,407 +1235,74 @@ document.addEventListener('keydown', e => {
   if (e.key==='<') { const s=[0.75,1,1.25,1.5,2],ci=s.indexOf(currentSpeed);if(ci>0)setSpeed(s[ci-1]); }
 });
 
-const ROLE_LABELS = { inhaber: 'Inhaber', admin: 'Admin' };
-const ROLE_COLORS = { inhaber: 'badge-inhaber', admin: 'badge-admin' };
-
-function applyAuth() {
-  document.getElementById('um-avatar').textContent = auth.initials || auth.name.slice(0,2).toUpperCase();
-  document.getElementById('um-name').textContent   = auth.name;
-  document.getElementById('um-role').textContent   = ROLE_LABELS[auth.role] || auth.role;
-  document.getElementById('dd-name').textContent   = auth.name;
-  document.getElementById('dd-email').textContent  = auth.email;
-  const badge = document.getElementById('dd-badge');
-  badge.textContent = ROLE_LABELS[auth.role] || auth.role;
-  badge.className   = 'um-header-badge ' + (ROLE_COLORS[auth.role] || '');
-}
-applyAuth();
-
-function logout() { localStorage.removeItem('mcom_auth'); location.href = 'login.html'; }
-
-// ── DROPDOWNS ─────────────────────────────────────────────
-function toggleDropdown(id) {
-  const el = document.getElementById(id);
-  const isOpen = el.classList.contains('open');
-  document.querySelectorAll('.cs-dropdown,.um-dropdown').forEach(d => d.classList.remove('open'));
-  if (!isOpen) el.classList.add('open');
-}
-document.addEventListener('click', e => {
-  if (!e.target.closest('.course-switcher') && !e.target.closest('.user-menu'))
-    document.querySelectorAll('.cs-dropdown,.um-dropdown').forEach(d => d.classList.remove('open'));
-});
-
-function selectModule(name, ddId) {
-  document.getElementById('cs-label').textContent = name;
-  document.getElementById('cs-dd').classList.remove('open');
-  document.getElementById('sb-course-name').textContent = name;
-}
-
-// ── PROFILE ───────────────────────────────────────────────
-function openProfile() {
-  document.getElementById('um-dd').classList.remove('open');
-  document.getElementById('p-avatar').textContent = auth.initials || auth.name.slice(0,2).toUpperCase();
-  document.getElementById('p-name').value  = auth.name;
-  document.getElementById('p-email').value = auth.email;
-  document.getElementById('p-pw').value    = '';
-  const b = document.getElementById('p-badge');
-  b.textContent = ROLE_LABELS[auth.role]; b.className = 'role-badge ' + ROLE_COLORS[auth.role];
-  document.getElementById('profile-modal').classList.add('open');
-}
-function closeProfile() { document.getElementById('profile-modal').classList.remove('open'); }
-function saveProfile() {
-  const name = document.getElementById('p-name').value.trim();
-  if (name) {
-    auth.name = name;
-    auth.initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-    localStorage.setItem('mcom_auth', JSON.stringify(auth));
-    applyAuth();
-  }
-  closeProfile();
-}
-document.getElementById('profile-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('profile-modal')) closeProfile();
-});
-
-// ── DATA ──────────────────────────────────────────────────
-let COURSES=[], SUMMARIES={}, allLessons=[], searchIdx=[], currentLesson=null;
-
-// ── FAVOURITES ────────────────────────────────────────────
-const FAV_KEY = () => `mcom_favs_${auth?.email||'guest'}`;
-let favSet = new Set(JSON.parse(localStorage.getItem(FAV_KEY())||'[]'));
-
-function saveFavs(){ localStorage.setItem(FAV_KEY(), JSON.stringify([...favSet])); }
-
-function toggleFavById(id){
-  favSet.has(id) ? favSet.delete(id) : favSet.add(id);
-  saveFavs();
-  buildSidebar();        // re-render sidebar (updates star + fav panel)
-  // keep current lesson active
-  if(currentLesson?.lesson){
-    const entry = allLessons.find(e=>e.lesson.id===currentLesson.lesson.id);
-    if(entry){ entry.item.classList.add('active'); }
-    const favBtn=document.getElementById('fav-btn');
-    if(favBtn){
-      const isFav=favSet.has(currentLesson.lesson.id);
-      favBtn.textContent=isFav?'★':'☆';
-      favBtn.style.color=isFav?'var(--bb)':'rgba(0,170,238,.3)';
-    }
-  }
-}
-
-function toggleFav(){
-  if(currentLesson?.lesson) toggleFavById(currentLesson.lesson.id);
-}
-
-function toggleFavPanel(){
-  const hdr=document.getElementById('fav-hdr');
-  const list=document.getElementById('fav-list');
-  hdr.classList.toggle('open');
-  list.style.display=hdr.classList.contains('open')?'block':'none';
-}
-
-function buildFavPanel(){
-  const list=document.getElementById('fav-list');
-  const countEl=document.getElementById('fav-count');
-  if(!favSet.size){
-    list.innerHTML=`<div class="fav-empty">Noch keine Favoriten gesetzt.</div>`;
-    countEl.textContent='';
-    return;
-  }
-  countEl.textContent=favSet.size;
-  const items=[];
-  COURSES.forEach(course=>{
-    course.chapters.forEach(ch=>{
-      ch.lessons.forEach(lesson=>{
-        if(favSet.has(lesson.id)) items.push({lesson,course,chapter:ch});
-      });
-    });
-  });
-  list.innerHTML='';
-  items.forEach(({lesson,course,chapter})=>{
-    const el=document.createElement('div');
-    el.className='fav-item';
-    const abbr=course.title.split(/[\s\(\)]/)[0].slice(0,8);
-    el.innerHTML=`<span style="color:var(--bb);font-size:11px">★</span>
-      <span style="flex:1;line-height:1.35">${lesson.title}</span>
-      <span class="fav-course-tag">${abbr}</span>`;
-    el.onclick=()=>loadLesson(lesson,el,course,chapter);
-    list.appendChild(el);
-  });
-}
-
-// Load summaries silently (optional — app works without it)
-fetch('summaries.json').then(r=>r.json()).then(d=>{ SUMMARIES=d; }).catch(()=>{});
-
-fetch('courses.json')
-  .then(r=>r.json())
-  .then(data=>{ COURSES=data; buildSidebar(); buildFavPanel(); buildWelcome(); buildSearchIdx(); })
-  .catch(()=>{
-    document.getElementById('welcome').innerHTML =
-      `<div style="padding:44px;color:#ef4444;font-size:14px">
-        <strong>courses.json nicht gefunden.</strong><br>
-        Starte den Server mit: <code>python3 server.py</code>
-      </div>`;
-  });
-
-// ── WELCOME ───────────────────────────────────────────────
-function buildWelcome() {
-  const total = COURSES.reduce((a,c)=>a+c.chapters.reduce((b,ch)=>b+ch.lessons.length,0),0);
-  const vids  = COURSES.reduce((a,c)=>a+c.chapters.reduce((b,ch)=>b+ch.lessons.filter(l=>l.video_url||l.hls_url).length,0),0);
-  const vtts  = COURSES.reduce((a,c)=>a+c.chapters.reduce((b,ch)=>b+ch.lessons.filter(l=>l.vtt_url).length,0),0);
-  document.getElementById('sb-count').textContent = total + ' Lektionen';
-
-  document.getElementById('welcome').innerHTML = `
-    <div class="wg">Hallo ${auth.name.split(' ')[0]} 👋</div>
-    <p class="ws">Willkommen im Niggehoff Training — ${COURSES.length} Kurse verfügbar.</p>
-    <div class="stats-row">
-      <div class="stat-card"><div class="sc-n">${COURSES.length}</div><div class="sc-l">Kurse</div></div>
-      <div class="stat-card"><div class="sc-n">${total}</div><div class="sc-l">Lektionen</div></div>
-      <div class="stat-card"><div class="sc-n">${vids}</div><div class="sc-l">mit Video</div></div>
-      <div class="stat-card"><div class="sc-n">${vtts}</div><div class="sc-l">mit Transkript</div></div>
-    </div>
-    <div class="cg-title">Alle Kurse</div>
-    <div class="course-grid">
-      ${COURSES.map((c,i)=>{
-        const n=c.chapters.reduce((a,ch)=>a+ch.lessons.length,0);
-        return `<div class="cc" onclick="openCourse(${i})">
-          <div class="cc-title">${c.title}</div>
-          <div class="cc-meta">${c.chapters.length} Kapitel</div>
-          <div class="cc-badge">${n} Lektionen</div>
-        </div>`;
-      }).join('')}
-      <div class="cc soon">
-        <div class="cc-title">Limbeck — VERKAUFEN</div>
-        <div class="cc-meta">Martin Limbeck Sales-Training</div>
-        <div class="cc-soon-badge">Coming Soon</div>
-      </div>
-      <div class="cc soon">
-        <div class="cc-title">Baulig Excellence</div>
-        <div class="cc-meta">Consulting & Skalierung</div>
-        <div class="cc-soon-badge">Coming Soon</div>
-      </div>
-    </div>
+// ── TUTORIAL ──────────────────────────────────────────────
+const TUTORIAL_KEY = () => `mcom_tutorial_done_${auth?.email||'guest'}`;
+const TUTORIAL_STEPS = [
+  {
+    icon: '📚',
+    title: 'Alle Kurse auf einen Blick',
+    body: 'Auf der Startseite siehst du alle verfügbaren Kurse. Klicke auf einen Kurs, um ihn zu öffnen — in der linken Sidebar findest du alle Kapitel und Lektionen.',
+    highlight: null,
+  },
+  {
+    icon: '▶️',
+    title: 'Videos anschauen',
+    body: 'Klicke auf eine Lektion in der Sidebar, um das Video zu starten. Die KDB speichert deinen genauen Fortschritt — beim nächsten Öffnen geht es genau dort weiter, wo du aufgehört hast.',
+    highlight: null,
+  },
+  {
+    icon: '⚡',
+    title: 'Speed & Shortcuts',
+    body: 'Mit den Speed-Buttons unter dem Video kannst du die Wiedergabegeschwindigkeit anpassen (0.75× bis 2×). Tastaturkürzel: <kbd>Space</kbd> = Play/Pause · <kbd>N</kbd>/<kbd>P</kbd> = nächste/vorherige Lektion · <kbd>&lt;</kbd>/<kbd>&gt;</kbd> = Speed.',
+    highlight: null,
+  },
+  {
+    icon: '📝',
+    title: 'Notizen & Favoriten',
+    body: 'Unter jedem Video kannst du Notizen zur Lektion hinterlegen — sie werden automatisch gespeichert. Lektionen, die du häufig brauchst, kannst du per ★ als Favorit markieren.',
+    highlight: null,
+  },
+  {
+    icon: '🧠',
+    title: 'KI-Zusammenfassungen & Suche',
+    body: 'Zu jeder Lektion gibt es eine KI-gestützte Zusammenfassung mit Key Takeaway und Fachbegriffen. Mit der Suche oben kannst du Transkripte aller Lektionen durchsuchen.',
+    highlight: null,
+  },
+];
+let tutStep = 0;
+function renderTutorial() {
+  const s = TUTORIAL_STEPS[tutStep];
+  document.getElementById('tutorial-step-content').innerHTML = `
+    <div style="font-size:36px;margin-bottom:16px">${s.icon}</div>
+    <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:10px">${s.title}</div>
+    <div style="font-size:13.5px;color:rgba(255,255,255,.55);line-height:1.7">${s.body}</div>
   `;
+  const dots = document.getElementById('tutorial-dots');
+  dots.innerHTML = TUTORIAL_STEPS.map((_,i)=>`<div style="width:${i===tutStep?22:8}px;height:8px;border-radius:4px;background:${i===tutStep?'var(--bb)':'rgba(255,255,255,.15)'};transition:width .25s,background .25s"></div>`).join('');
+  document.getElementById('tutorial-back-btn').style.display = tutStep > 0 ? 'block' : 'none';
+  const nb = document.getElementById('tutorial-next-btn');
+  nb.textContent = tutStep === TUTORIAL_STEPS.length-1 ? 'Loslegen ✓' : 'Weiter →';
+}
+function tutorialStep(dir) {
+  tutStep += dir;
+  if (tutStep >= TUTORIAL_STEPS.length) { closeTutorial(); return; }
+  if (tutStep < 0) tutStep = 0;
+  renderTutorial();
+}
+function openTutorial() {
+  tutStep = 0;
+  renderTutorial();
+  document.getElementById('tutorial-overlay').style.display='flex';
+}
+function closeTutorial() {
+  document.getElementById('tutorial-overlay').style.display='none';
+  localStorage.setItem(TUTORIAL_KEY(), '1');
+}
+// Show on first login
+if (!localStorage.getItem(TUTORIAL_KEY())) {
+  setTimeout(openTutorial, 800);
 }
 
-function openCourse(i) {
-  const sec = document.querySelectorAll('.course-section')[i];
-  const hdr = sec?.querySelector('.course-header');
-  const grp = sec?.querySelector('.chapter-group');
-  if (hdr && grp) { hdr.classList.add('open'); grp.classList.add('open'); sec.scrollIntoView({block:'start',behavior:'smooth'}); }
-}
-
-// ── SIDEBAR ───────────────────────────────────────────────
-function buildSidebar() {
-  const list = document.getElementById('course-list');
-  list.innerHTML = ''; allLessons = [];
-  COURSES.forEach((course,ci)=>{
-    const sec = document.createElement('div'); sec.className='course-section';
-    const total = course.chapters.reduce((a,ch)=>a+ch.lessons.length,0);
-    const hdr = document.createElement('div'); hdr.className='course-header';
-    hdr.innerHTML=`<span class="ch-chevron">▶</span>
-      <span style="flex:1;line-height:1.3">${course.title}</span>
-      <span class="ch-count">${total}</span>`;
-    const grp = document.createElement('div'); grp.className='chapter-group';
-    hdr.onclick=()=>{ hdr.classList.toggle('open'); grp.classList.toggle('open'); };
-    course.chapters.forEach((ch,chi)=>{
-      if(course.chapters.length>1){
-        const lbl=document.createElement('div'); lbl.className='ch-label'; lbl.textContent=ch.title; grp.appendChild(lbl);
-      }
-      ch.lessons.forEach((lesson,li)=>{
-        const item=document.createElement('div');
-        const isFav = favSet.has(lesson.id);
-        item.className='lesson-item'+((lesson.video_url||lesson.hls_url)?' has-video':'')+(isFav?' fav':'');
-        item.innerHTML=`<span class="li-dot"></span><span style="flex:1">${lesson.title}</span><span class="li-star" title="Favorit">★</span>`;
-        item.querySelector('.li-star').onclick=(e)=>{e.stopPropagation();toggleFavById(lesson.id);};
-        item.onclick=()=>loadLesson(lesson,item,course,ch);
-        grp.appendChild(item);
-        allLessons.push({lesson,item,course,chapter:ch});
-      });
-    });
-    sec.appendChild(hdr); sec.appendChild(grp); list.appendChild(sec);
-  });
-  buildFavPanel();
-}
-
-// ── SEARCH ────────────────────────────────────────────────
-function buildSearchIdx() {
-  COURSES.forEach(c=>c.chapters.forEach(ch=>ch.lessons.forEach(l=>{
-    if(l.transcript) searchIdx.push({lesson:l,course:c,chapter:ch,t:l.transcript.toLowerCase()});
-  })));
-}
-const searchEl=document.getElementById('search'), srEl=document.getElementById('sr');
-searchEl.addEventListener('input',()=>{
-  const q=searchEl.value.trim().toLowerCase();
-  if(q.length<3){srEl.style.display='none';return;}
-  const hits=searchIdx.filter(e=>e.t.includes(q)).slice(0,15);
-  if(!hits.length){srEl.style.display='none';return;}
-  srEl.innerHTML=hits.map((h,i)=>{
-    const idx=h.t.indexOf(q);
-    const raw=h.lesson.transcript.substring(Math.max(0,idx-40),idx+80);
-    const snip=raw.replace(new RegExp(q,'gi'),m=>`<mark>${m}</mark>`);
-    return `<div class="sr-item" data-i="${i}">
-      <div class="sr-course">${h.course.title}</div>
-      <div class="sr-title">${h.lesson.title}</div>
-      <div class="sr-snip">…${snip}…</div>
-    </div>`;
-  }).join('');
-  srEl.querySelectorAll('.sr-item').forEach((el,i)=>{
-    el.onclick=()=>{
-      const h=hits[i];
-      const found=allLessons.find(e=>e.lesson===h.lesson);
-      if(found){openCourse(COURSES.indexOf(h.course));loadLesson(found.lesson,found.item,found.course,found.chapter);}
-      srEl.style.display='none'; searchEl.value='';
-    };
-  });
-  srEl.style.display='block';
-});
-document.addEventListener('click',e=>{ if(!e.target.closest('.search-wrap')) srEl.style.display='none'; });
-
-// ── LOAD LESSON ───────────────────────────────────────────
-function loadLesson(lesson,itemEl,course,chapter) {
-  document.querySelectorAll('.lesson-item').forEach(e=>e.classList.remove('active'));
-  itemEl.classList.add('active'); itemEl.scrollIntoView({block:'nearest'});
-  currentLesson={lesson,item:itemEl,course,chapter};
-
-  document.getElementById('welcome').style.display='none';
-  document.getElementById('lesson-view').style.display='block';
-  document.getElementById('bc-course').textContent=course.title;
-  document.getElementById('bc-chapter').textContent=chapter.title;
-  document.getElementById('lesson-title-text').textContent=lesson.title;
-  // Favoriten-Stern aktualisieren
-  const favBtn=document.getElementById('fav-btn');
-  favBtn.textContent=favSet.has(lesson.id)?'★':'☆';
-  favBtn.style.color=favSet.has(lesson.id)?'var(--bb)':'rgba(0,170,238,.3)';
-
-  const aud=document.getElementById('aud');
-  const container=document.getElementById('player-container');
-
-  const hasVideo = lesson.video_url || lesson.hls_url || lesson.audio_url;
-  if(hasVideo){
-    const posterAttr = lesson.img_url ? `poster="${lesson.img_url}"` : '';
-    const trackEl    = lesson.vtt_url  ? `<track kind="subtitles" src="${lesson.vtt_url}" srclang="de" label="Deutsch" default>` : '';
-    container.innerHTML=`<div class="player-wrap">
-      <video id="vid" controls crossorigin="anonymous" ${posterAttr}
-        style="width:100%;height:100%;display:block;">${trackEl}</video>
-    </div>`;
-    const v = document.getElementById('vid');
-
-    const showOffline=()=>{
-      container.innerHTML=`<div class="offline-notice">
-        <div class="on-icon">📴</div>
-        <div class="on-title">Inhalt nicht verfügbar</div>
-        <div class="on-sub">Dieser Inhalt wurde durch den Kursteilnehmer gelöscht oder offline gestellt, war aber noch im Datei- und Kurspfad auffindbar.</div>
-      </div>`;
-      aud.src=''; aud.load();
-    };
-
-    if(lesson.hls_url){
-      // HLS stream (Pro Training)
-      if(Hls.isSupported()){
-        const hls = new Hls();
-        hls.on(Hls.Events.ERROR,(e,d)=>{ if(d.fatal) showOffline(); });
-        hls.loadSource(lesson.hls_url);
-        hls.attachMedia(v);
-      } else if(v.canPlayType('application/vnd.apple.mpegurl')){
-        v.src = lesson.hls_url;
-        v.addEventListener('error', showOffline, {once:true});
-      } else { showOffline(); }
-      aud.src=''; aud.load();
-    } else if(lesson.video_url){
-      // Separate DASH video + audio tracks
-      v.addEventListener('error', showOffline, {once:true});
-      v.src = lesson.video_url;
-      if(lesson.audio_url){
-        aud.src=lesson.audio_url;
-        aud.load();
-        aud.volume=1.0;
-        aud.muted=false;
-        v.addEventListener('play',()=>{aud.currentTime=v.currentTime;aud.play().catch(()=>{});});
-        v.addEventListener('pause',()=>aud.pause());
-        v.addEventListener('seeked',()=>{aud.currentTime=v.currentTime;if(!v.paused){aud.play().catch(()=>{});}});
-        v.addEventListener('ratechange',()=>{aud.playbackRate=v.playbackRate;});
-        v.addEventListener('volumechange',()=>{aud.muted=v.muted;});
-      } else { aud.src=''; aud.load(); }
-    }
-  } else {
-    container.innerHTML=`<div class="no-video">🎬 Kein Video verfügbar</div>`;
-    aud.src=''; aud.load();
-  }
-
-  const tEl=document.getElementById('transcript-text');
-  if(lesson.transcript){tEl.textContent=lesson.transcript;}
-  else if(lesson.vtt_url){
-    tEl.innerHTML='<span style="color:var(--muted)">Lade Transkript…</span>';
-    fetch(lesson.vtt_url).then(r=>r.text()).then(vtt=>{
-      tEl.textContent=vtt.replace(/WEBVTT[\s\S]*?\n\n/,'')
-        .replace(/\d{2}:\d{2}[\d:.,]+ --> [\d:.,]+\s*\n/g,'')
-        .replace(/<[^>]+>/g,'').replace(/\n+/g,' ').trim();
-    }).catch(()=>{tEl.textContent='Transkript nicht ladbar.';});
-  } else {tEl.textContent='Kein Transkript verfügbar.';}
-
-  const mb=document.getElementById('materials-bar');
-  const ml=document.getElementById('materials-list');
-  if(lesson.materials?.length){
-    ml.innerHTML=lesson.materials.map(m=>{
-      const ext=m.name.split('.').pop().toUpperCase();
-      const icon=ext==='PDF'?'📄':ext.includes('PPT')?'📊':'📁';
-      const label=m.name.replace(/\.[^.]+$/,'').replace(/_/g,' ');
-      return `<a class="mat-item" href="Kurs/${m.path}" target="_blank" download>
-        <span>${icon}</span><span>${label}</span><span class="mat-ext">${ext}</span>
-      </a>`;
-    }).join('');
-  } else {
-    ml.innerHTML='<span class="mat-empty">Keine Datei zum Download verfügbar (Niggehoff)</span>';
-  }
-  renderSummary(lesson.id);
-  window.scrollTo(0,0);
-}
-
-function renderSummary(lessonId){
-  const s = SUMMARIES[lessonId];
-  const inl  = document.getElementById('inline-summary');
-  const panel = document.getElementById('sum-panel');
-  if(!s){ inl.style.display='none'; panel.style.display='none'; return; }
-
-  function buildConcepts(concepts){
-    if(!concepts?.length) return '';
-    return concepts.map(c=>{
-      const wiki = c.wikipedia_de
-        ? `<a href="https://de.wikipedia.org/wiki/${encodeURIComponent(c.wikipedia_de)}" target="_blank" title="Wikipedia">WP</a>
-           <a href="https://scholar.google.com/scholar?q=${encodeURIComponent(c.term)}" target="_blank" title="Google Scholar">GS</a>`
-        : `<a href="https://scholar.google.com/scholar?q=${encodeURIComponent(c.term)}" target="_blank" title="Google Scholar">GS</a>`;
-      return `<span class="concept-chip">${c.term} ${wiki}</span>`;
-    }).join('');
-  }
-
-  function buildBullets(bullets){
-    return (bullets||[]).map(b=>`<li>${b}</li>`).join('');
-  }
-
-  // Inline (under video)
-  document.getElementById('sum-key').textContent    = s.key_takeaway||'';
-  document.getElementById('sum-bullets').innerHTML  = buildBullets(s.bullets);
-  document.getElementById('sum-concepts').innerHTML = buildConcepts(s.concepts);
-  inl.style.display = 'block';
-
-  // Right panel
-  document.getElementById('sum-key-r').textContent    = s.key_takeaway||'';
-  document.getElementById('sum-bullets-r').innerHTML  = buildBullets(s.bullets);
-  document.getElementById('sum-concepts-r').innerHTML = buildConcepts(s.concepts);
-  panel.style.display = 'block';
-}
-
-function navigate(dir){
-  if(!currentLesson)return;
-  const idx=allLessons.findIndex(e=>e.lesson===currentLesson.lesson);
-  const next=allLessons[idx+dir];
-  if(next)loadLesson(next.lesson,next.item,next.course,next.chapter);
-}
-document.addEventListener('keydown',e=>{
-  if(e.target.tagName==='INPUT')return;
-  if(e.key==='ArrowRight')navigate(1);
-  if(e.key==='ArrowLeft')navigate(-1);
-});
 </script>
 </body>
 </html>

@@ -11,6 +11,8 @@ merge_videos.py
 build_courses_json.py
 rescrape*.py
 generate_summaries.py
+generate_kompendium.py
+generate_chapter_summaries.py
 server.py
 *.log
 
