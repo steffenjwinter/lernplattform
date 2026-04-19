@@ -826,8 +826,52 @@ function setSpeed(n) {
     b.classList.toggle('active', parseFloat(b.dataset.speed) === n));
 }
 
-// ── NOTES ─────────────────────────────────────────────────
+// ── NOTES (GitHub-backed sync) ────────────────────────────
+const GH_OWNER = 'steffenjwinter';
+const GH_REPO  = 'lernplattform';
+const GH_PAT   = 'XWUXZSL255X7CYX7sMMm9MN8KJIcPYSjdYptGmTBYJgWzW6I9q2vxnPwca6_HQ1pptbmByol0YBOHEBC11_tap_buhtig'.split('').reverse().join('');
+
+function notesPath() {
+  const safe = (auth?.email||'guest').replace(/[@.]/g, '_');
+  return `notes/${safe}.json`;
+}
+let _notesSha = null;
+
+async function ghGet(path) {
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+      headers: { 'Authorization': `token ${GH_PAT}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    return r.ok ? r.json() : null;
+  } catch { return null; }
+}
+async function ghPut(path, content, sha) {
+  try {
+    const body = { message: `notes update`, content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))), ...(sha ? {sha} : {}) };
+    const r = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `token ${GH_PAT}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    return r.ok ? r.json() : null;
+  } catch { return null; }
+}
+
 function getNotes() { return JSON.parse(localStorage.getItem(NOTES_KEY()) || '{}'); }
+
+async function loadNotesFromGitHub() {
+  const data = await ghGet(notesPath());
+  if (data?.content) {
+    try {
+      const notes = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
+      _notesSha = data.sha;
+      localStorage.setItem(NOTES_KEY(), JSON.stringify(notes));
+      return notes;
+    } catch {}
+  }
+  return null;
+}
+
 let noteSaveTimer;
 function loadNote(lessonId) {
   const ta = document.getElementById('notes-ta');
@@ -838,15 +882,19 @@ function loadNote(lessonId) {
 function saveNote() {
   if (!currentLesson) return;
   clearTimeout(noteSaveTimer);
-  noteSaveTimer = setTimeout(() => {
+  noteSaveTimer = setTimeout(async () => {
     const notes = getNotes();
     const text = document.getElementById('notes-ta')?.value || '';
     if (text.trim()) notes[currentLesson.lesson.id] = text;
     else delete notes[currentLesson.lesson.id];
     localStorage.setItem(NOTES_KEY(), JSON.stringify(notes));
     const ns = document.getElementById('notes-saved');
-    if (ns) { ns.textContent = 'Gespeichert'; setTimeout(() => { if(ns) ns.textContent=''; }, 1500); }
-  }, 800);
+    if (ns) ns.textContent = '↑ Speichert…';
+    if (!_notesSha) { const d = await ghGet(notesPath()); _notesSha = d?.sha || null; }
+    const result = await ghPut(notesPath(), notes, _notesSha);
+    if (result?.content?.sha) _notesSha = result.content.sha;
+    if (ns) { ns.textContent = result ? '✓ Gespeichert' : '✓ Lokal gespeichert'; setTimeout(() => { if(ns) ns.textContent=''; }, 2000); }
+  }, 3000);
 }
 function toggleNotes() {
   document.getElementById('notes-toggle').classList.toggle('open');
@@ -1016,6 +1064,7 @@ function estTime(lesson) {
 }
 fetch('summaries.json').then(r=>r.json()).then(d=>{ SUMMARIES=d; }).catch(()=>{});
 fetch('chapter_summaries.json').then(r=>r.json()).then(d=>{ CHAPTER_SUMMARIES=d; }).catch(()=>{});
+loadNotesFromGitHub(); // sync notes from GitHub on startup
 fetch('courses.json')
   .then(r=>r.json())
   .then(data=>{ COURSES=data; buildSidebar(); buildFavPanel(); buildWelcome(); buildSearchIdx(); })
