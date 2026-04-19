@@ -1202,6 +1202,19 @@ document.addEventListener('click',e=>{ if(!e.target.closest('.search-wrap')) srE
 
 // ── LOAD LESSON ───────────────────────────────────────────
 function loadLesson(lesson, itemEl, course, chapter) {
+  // Category 3: no media + no transcript → show chapter overview instead
+  const hasMedia = lesson.video_url || lesson.audio_url || lesson.hls_url;
+  const hasContent = lesson.transcript || hasMedia;
+  if (!hasContent) {
+    const key = `${course.id}___${chapter.id}`;
+    if (CHAPTER_SUMMARIES[key]) {
+      document.querySelectorAll('.lesson-item').forEach(e=>e.classList.remove('active'));
+      itemEl.classList.add('active'); itemEl.scrollIntoView({block:'nearest'});
+      loadChapterSummary(course, chapter, key);
+      return;
+    }
+  }
+
   document.querySelectorAll('.lesson-item').forEach(e=>e.classList.remove('active'));
   itemEl.classList.add('active'); itemEl.scrollIntoView({block:'nearest'});
   currentLesson = {lesson,item:itemEl,course,chapter};
