@@ -273,7 +273,9 @@ async function doLogin(e) {
   try {
     const h = await sha256(pw);
     const u = USERS[email];
-    if (u && u.h === h) {
+    const override = localStorage.getItem(`mcom_pwhash_${email}`);
+    const expectedH = override || u?.h;
+    if (u && expectedH === h) {
       const { h: _, ...safe } = u;
       localStorage.setItem('mcom_auth', JSON.stringify({ email, ...safe, ts: Date.now() }));
       location.href = 'index.html';

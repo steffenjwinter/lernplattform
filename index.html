@@ -10,10 +10,14 @@
   :root {
     --bd:#060f1c; --bm:#0D1F35; --bl:#132B47; --bb:#00AAEE; --bb2:#0088CC;
     --acc:#00AAEE; --acc-l:rgba(0,170,238,.08); --acc-d:#0088CC;
-    --bg:#f0f4f8; --wh:#fff; --border:#dde3ec;
+    --bg:#f0f4f8; --wh:#ffffff; --border:#dde3ec;
     --sb-bg:#0D1F35; --sb-border:rgba(255,255,255,.07);
     --sb-text:rgba(255,255,255,.62); --sb-text-h:#fff;
-    --text:#111827; --muted:#6b7280; --sidebar-w:288px;
+    --text:#111827; --muted:#6b7280; --muted2:#374151; --sidebar-w:288px;
+  }
+  [data-theme="dark"] {
+    --bg:#0b1929; --wh:#0f2240; --border:rgba(255,255,255,.08);
+    --text:#dce6f4; --muted:#8898b8; --muted2:#a8b8d0;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);
@@ -473,6 +477,42 @@
     left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform .2s;}
   .toggle-switch input:checked+.toggle-slider{background:var(--acc);}
   .toggle-switch input:checked+.toggle-slider::before{transform:translateX(16px);}
+
+  /* ── THEME TOGGLE BUTTON ── */
+  .theme-btn{background:none;border:1px solid rgba(255,255,255,.16);border-radius:8px;
+    color:rgba(255,255,255,.65);font-size:15px;width:34px;height:34px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    transition:background .15s,border-color .15s;flex-shrink:0;}
+  .theme-btn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.3);}
+
+  /* ── MOBILE HAMBURGER ── */
+  #mob-menu-btn{display:none;background:none;border:none;color:rgba(255,255,255,.8);
+    font-size:20px;cursor:pointer;padding:4px 6px;line-height:1;flex-shrink:0;}
+
+  /* ── CHAPTER PROGRESS BADGE ── */
+  .ch-prog{font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;flex-shrink:0;
+    background:rgba(255,255,255,.07);color:rgba(255,255,255,.28);}
+  .ch-prog.partial{background:rgba(251,146,60,.18);color:rgba(251,146,60,.9);}
+  .ch-prog.done{background:rgba(22,163,74,.18);color:rgba(34,197,94,.9);}
+
+  /* ── MOBILE SIDEBAR ── */
+  #sb-overlay{display:none;position:fixed;inset:0;top:54px;
+    background:rgba(0,0,0,.5);z-index:399;}
+  #sb-overlay.visible{display:block;}
+  @media(max-width:680px){
+    #mob-menu-btn{display:flex;}
+    .nav-logo,.nav-divider:first-of-type{display:none;}
+    #sidebar{
+      position:fixed;top:54px;left:0;bottom:0;z-index:400;
+      transform:translateX(-100%);
+      transition:transform .28s cubic-bezier(.4,0,.2,1);
+      width:var(--sidebar-w)!important;
+    }
+    #sidebar.mob-open{transform:translateX(0);}
+    .sb-reopen{display:none!important;}
+    #main{width:100%;}
+    .lesson-grid{grid-template-columns:1fr!important;}
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
 </head>
@@ -480,6 +520,7 @@
 
 <!-- TOP NAV -->
 <nav id="topnav">
+  <button id="mob-menu-btn" onclick="toggleMobileSidebar()" aria-label="Menü">☰</button>
   <div class="nav-logo">
     <img src="logo-light.png" alt="mitarbeiter.com">
   </div>
@@ -522,6 +563,9 @@
     <div id="sr"></div>
   </div>
 
+  <!-- Theme Toggle -->
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Dark/Light wechseln">🌙</button>
+
   <!-- User Menu -->
   <div class="user-menu" id="um">
     <div class="um-btn" onclick="toggleDropdown('um-dd')">
@@ -544,6 +588,7 @@
   </div>
 </nav>
 
+<div id="sb-overlay" onclick="toggleMobileSidebar()"></div>
 <div id="layout">
   <!-- SIDEBAR -->
   <div id="sidebar">
@@ -666,7 +711,8 @@
       <label>E-Mail</label>
       <input type="email" id="p-email" disabled>
       <label>Passwort ändern</label>
-      <input type="password" id="p-pw" placeholder="Neues Passwort (optional)">
+      <input type="password" id="p-pw" placeholder="Neues Passwort (min. 6 Zeichen)">
+      <div id="p-pw-msg" style="font-size:11px;margin-top:4px;min-height:16px"></div>
     </div>
     <div class="toggle-row">
       <span class="toggle-row-label">Fortschritt tracken</span>
@@ -782,6 +828,28 @@ function toggleSidebar() {
   sb.classList.toggle('collapsed');
   reopen.style.display = sb.classList.contains('collapsed') ? 'flex' : 'none';
 }
+function toggleMobileSidebar(forceClose) {
+  const sb  = document.getElementById('sidebar');
+  const ov  = document.getElementById('sb-overlay');
+  const open = sb.classList.contains('mob-open');
+  if (forceClose || open) { sb.classList.remove('mob-open'); ov.classList.remove('visible'); }
+  else                     { sb.classList.add('mob-open');    ov.classList.add('visible'); }
+}
+
+// ── DARK / LIGHT THEME ────────────────────────────────────
+const THEME_KEY = () => `mcom_theme_${auth?.email||'guest'}`;
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY(), next);
+  applyTheme(next);
+}
+applyTheme(localStorage.getItem(THEME_KEY()) || 'light');
 
 // ── FAVOURITES ────────────────────────────────────────────
 let favSet = new Set(JSON.parse(localStorage.getItem(FAV_KEY())||'[]'));
@@ -854,10 +922,51 @@ function openProfile() {
   document.getElementById('profile-modal').classList.add('open');
 }
 function closeProfile() { document.getElementById('profile-modal').classList.remove('open'); }
-function saveProfile() {
+async function saveProfile() {
   const name = document.getElementById('p-name').value.trim();
   if (name) { auth.name=name; auth.initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); localStorage.setItem('mcom_auth',JSON.stringify(auth)); applyAuth(); }
+  const pwInput = document.getElementById('p-pw').value;
+  const pwMsg   = document.getElementById('p-pw-msg');
+  if (pwInput.length > 0 && pwInput.length < 6) {
+    if (pwMsg) { pwMsg.textContent = '⚠ Mindestens 6 Zeichen'; pwMsg.style.color = '#f59e0b'; }
+    return;
+  }
+  if (pwInput.length >= 6) {
+    const h = await sha256(pwInput);
+    localStorage.setItem(`mcom_pwhash_${auth.email}`, h);
+    if (pwMsg) { pwMsg.textContent = '✓ Passwort gespeichert'; pwMsg.style.color = '#22c55e'; }
+    setTimeout(closeProfile, 900);
+    return;
+  }
   closeProfile();
+}
+
+async function sha256(str) {
+  if (window.crypto?.subtle) {
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    } catch(e){}
+  }
+  return sha256Sync(str);
+}
+function sha256Sync(msg){
+  function rr(v,a){return(v>>>a)|(v<<(32-a));}
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let h0=0x6a09e667,h1=0xbb67ae85,h2=0x3c6ef372,h3=0xa54ff53a,h4=0x510e527f,h5=0x9b05688c,h6=0x1f83d9ab,h7=0x5be0cd19;
+  const bytes=new TextEncoder().encode(msg),len=bytes.length,bitLen=len*8;
+  const padLen=((len+9)%64<=0?128:64)-((len+9)%64)+len+9;
+  const buf=new Uint8Array(padLen);buf.set(bytes);buf[len]=0x80;
+  new DataView(buf.buffer).setUint32(padLen-4,bitLen,false);
+  for(let off=0;off<padLen;off+=64){
+    const w=new Array(64);
+    for(let i=0;i<16;i++)w[i]=new DataView(buf.buffer).getUint32(off+i*4,false);
+    for(let i=16;i<64;i++){const s0=(rr(w[i-15],7)^rr(w[i-15],18)^(w[i-15]>>>3)),s1=(rr(w[i-2],17)^rr(w[i-2],19)^(w[i-2]>>>10));w[i]=(w[i-16]+s0+w[i-7]+s1)|0;}
+    let [a,b,c,d,e,f,g,h]=[h0,h1,h2,h3,h4,h5,h6,h7];
+    for(let i=0;i<64;i++){const S1=(rr(e,6)^rr(e,11)^rr(e,25)),ch=(e&f)^(~e&g),t1=(h+S1+ch+K[i]+w[i])|0,S0=(rr(a,2)^rr(a,13)^rr(a,22)),maj=(a&b)^(a&c)^(b&c),t2=(S0+maj)|0;[h,g,f,e,d,c,b,a]=[g,f,e,(d+t1)|0,c,b,a,(t1+t2)|0];}
+    h0=(h0+a)|0;h1=(h1+b)|0;h2=(h2+c)|0;h3=(h3+d)|0;h4=(h4+e)|0;h5=(h5+f)|0;h6=(h6+g)|0;h7=(h7+h)|0;
+  }
+  return[h0,h1,h2,h3,h4,h5,h6,h7].map(n=>(n>>>0).toString(16).padStart(8,'0')).join('');
 }
 function saveProgressSetting() {
   saveSettings({ ...getSettings(), trackProgress: document.getElementById('p-track-progress').checked });
@@ -1030,7 +1139,12 @@ function buildSidebar() {
         const lbl=document.createElement('div'); lbl.className='ch-label';
         const key=`${course.id}___${ch.id}`;
         const hasSumm = !!CHAPTER_SUMMARIES[key];
-        lbl.innerHTML=`<span style="flex:1">${ch.title}</span>${hasSumm?'<span style="font-size:9px;opacity:.45;margin-left:4px">▸ Übersicht</span>':''}`;
+        const chTotal = ch.lessons.length;
+        const chWatched = getSettings().trackProgress ? ch.lessons.filter(l=>progress[l.id]?.watched).length : 0;
+        const progClass = getSettings().trackProgress ? (chWatched===chTotal&&chTotal>0?' done':chWatched>0?' partial':'') : '';
+        const progBadge = getSettings().trackProgress
+          ? `<span class="ch-prog${progClass}">${chWatched}/${chTotal}</span>` : '';
+        lbl.innerHTML=`<span style="flex:1">${ch.title}</span>${progBadge}${hasSumm?'<span style="font-size:9px;opacity:.35;margin-left:6px;cursor:pointer">▸</span>':''}`;
         if (hasSumm) lbl.onclick=(e)=>{ e.stopPropagation(); loadChapterSummary(course,ch,key); };
         grp.appendChild(lbl);
       }
@@ -1044,7 +1158,7 @@ function buildSidebar() {
         item.className='lesson-item'+((lesson.video_url||lesson.hls_url)?' has-video':'')+(isFav?' fav':'')+progClass;
         item.innerHTML=`<span class="li-dot"></span><span style="flex:1">${lesson.title}</span>${timeEl}<span class="li-star" title="Favorit">★</span>`;
         item.querySelector('.li-star').onclick=(e)=>{e.stopPropagation();toggleFavById(lesson.id);};
-        item.onclick=()=>loadLesson(lesson,item,course,ch);
+        item.onclick=()=>{ loadLesson(lesson,item,course,ch); toggleMobileSidebar(true); };
         grp.appendChild(item);
         allLessons.push({lesson,item,course,chapter:ch});
       });
@@ -1063,14 +1177,17 @@ function buildSearchIdx() {
 const searchEl=document.getElementById('search'), srEl=document.getElementById('sr');
 searchEl.addEventListener('input',()=>{
   const q=searchEl.value.trim().toLowerCase();
-  if(q.length<3){srEl.style.display='none';return;}
-  const hits=searchIdx.filter(e=>e.t.includes(q)).slice(0,15);
+  if(q.length<2){srEl.style.display='none';return;}
+  const words=q.split(/\s+/).filter(w=>w.length>1);
+  const hits=searchIdx.filter(e=>words.every(w=>e.t.includes(w))).slice(0,15);
   if(!hits.length){srEl.style.display='none';return;}
   srEl.innerHTML=hits.map((h,i)=>{
-    const idx=h.t.indexOf(q);
-    const raw=h.lesson.transcript.substring(Math.max(0,idx-40),idx+80);
-    const snip=raw.replace(new RegExp(q,'gi'),m=>`<mark>${m}</mark>`);
-    return `<div class="sr-item" data-i="${i}"><div class="sr-course">${h.course.title}</div><div class="sr-title">${h.lesson.title}</div><div class="sr-snip">…${snip}…</div></div>`;
+    const firstWord=words[0];
+    const idx=h.t.indexOf(firstWord);
+    const raw=h.lesson.transcript.substring(Math.max(0,idx-55),idx+110);
+    const pattern=words.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+    const snip=raw.replace(new RegExp(pattern,'gi'),m=>`<mark>${m}</mark>`);
+    return `<div class="sr-item" data-i="${i}"><div class="sr-course">${h.course.title} › ${h.chapter.title}</div><div class="sr-title">${h.lesson.title}</div><div class="sr-snip">…${snip}…</div></div>`;
   }).join('');
   srEl.querySelectorAll('.sr-item').forEach((el,i)=>{
     el.onclick=()=>{
