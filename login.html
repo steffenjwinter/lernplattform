@@ -203,9 +203,9 @@ input:focus{ border-color:var(--bb); background:rgba(0,170,238,.07); box-shadow:
 <script>
 // ── AUTH (passwords stored as SHA-256 hashes — never plaintext) ──
 const USERS = {
-  'sw@mitarbeiter.com': { h:'040fc1b1a79f552e1d0f51b75a186548c7aeced36ac64cba7f281f1be62a0f7a', name:'Steffen Winter', role:'inhaber', initials:'SW' },
-  'cc@mitarbeiter.com': { h:'040fc1b1a79f552e1d0f51b75a186548c7aeced36ac64cba7f281f1be62a0f7a', name:'Carlo C.',       role:'admin',   initials:'CC' },
-  'js@mitarbeiter.com': { h:'040fc1b1a79f552e1d0f51b75a186548c7aeced36ac64cba7f281f1be62a0f7a', name:'Jean S.',        role:'admin',   initials:'JS' },
+  'sw@mitarbeiter.com': { h:'ecc77d4d1d24ff88b1e0e3ddeb3b0acddde0c86276453468276756d750523d74', name:'Steffen Winter', role:'inhaber', initials:'SW' },
+  'cc@mitarbeiter.com': { h:'ecc77d4d1d24ff88b1e0e3ddeb3b0acddde0c86276453468276756d750523d74', name:'Carlo C.',       role:'admin',   initials:'CC' },
+  'js@mitarbeiter.com': { h:'ecc77d4d1d24ff88b1e0e3ddeb3b0acddde0c86276453468276756d750523d74', name:'Jean S.',        role:'admin',   initials:'JS' },
 };
 if (localStorage.getItem('mcom_auth')) location.href = 'index.html';
 
@@ -320,7 +320,7 @@ if (window.matchMedia('(pointer: fine)').matches) {
 }
 
 // ── PARTICLE FIELD ──
-if (window.matchMedia('(pointer: fine)').matches) (function(){
+if (window.matchMedia('(pointer: fine)').matches) {(function(){
   const canvas = document.getElementById('hero-canvas');
   const ctx    = canvas.getContext('2d');
   let W, H, mouse = { x:-999, y:-999 };

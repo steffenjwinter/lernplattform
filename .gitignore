@@ -4,6 +4,11 @@ Kurs/**
 !Kurs/**/*.pdf
 !Kurs/**/*.PDF
 
+# Scraper-Output (lokal only)
+Kurs_Primer/
+Kurs_TUV/
+tuev_library_debug.html
+
 # Scraper / Build-Skripte (lokal only)
 scrape*.py
 download_audio.py
