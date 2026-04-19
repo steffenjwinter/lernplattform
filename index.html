@@ -447,6 +447,36 @@
   .cc-progress{height:3px;background:var(--border);border-radius:2px;margin-top:10px;}
   .cc-progress-fill{height:100%;background:var(--acc);border-radius:2px;transition:width .3s;}
 
+  /* ── RESSOURCEN CARD ── */
+  .res-card{background:var(--wh);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:14px;}
+  .res-dl-btn{display:flex;align-items:center;gap:9px;background:var(--acc);color:#fff;
+    border-radius:9px;padding:10px 14px;text-decoration:none;font-size:12.5px;font-weight:700;
+    margin-bottom:10px;transition:background .14s;}
+  .res-dl-btn:hover{background:var(--acc-d);}
+  .res-dl-btn .dl-icon{font-size:18px;line-height:1;}
+  .res-stat-row{display:flex;flex-direction:column;gap:6px;}
+  .res-stat{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;
+    cursor:pointer;transition:background .12s;font-size:11.5px;color:var(--muted2);}
+  .res-stat:hover{background:rgba(0,170,238,.07);color:var(--text);}
+  .res-stat-icon{font-size:14px;width:20px;text-align:center;}
+  .res-stat-count{font-weight:700;color:var(--acc);margin-left:auto;font-size:11px;}
+
+  /* ── GLOSSAR VIEW ── */
+  #glossar-view{display:none;padding:32px 36px;max-width:1000px;}
+  .glossar-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px;}
+  .glossar-sub{font-size:12px;color:var(--muted);margin-bottom:28px;}
+  .glossar-letter-group{margin-bottom:24px;}
+  .glossar-letter{font-size:11px;font-weight:800;color:var(--acc);letter-spacing:.12em;
+    text-transform:uppercase;border-bottom:2px solid var(--accent-pale,rgba(0,170,238,.2));
+    padding-bottom:4px;margin-bottom:10px;}
+  .glossar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;}
+  .glossar-item{background:var(--wh);border:1px solid var(--border);border-radius:8px;
+    padding:7px 11px;font-size:12px;font-weight:600;color:var(--text);display:flex;
+    align-items:center;justify-content:space-between;gap:6px;}
+  .glossar-wiki{font-size:10px;color:var(--bb);text-decoration:none;opacity:.7;
+    padding:2px 6px;border-radius:4px;background:rgba(0,170,238,.08);flex-shrink:0;}
+  .glossar-wiki:hover{opacity:1;background:rgba(0,170,238,.18);}
+
   /* ── COMING SOON FULL-WIDTH ── */
   .coming-soon-section{margin-top:32px;padding-bottom:32px;}
   .cs-divider{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
@@ -521,7 +551,7 @@
 <!-- TOP NAV -->
 <nav id="topnav">
   <button id="mob-menu-btn" onclick="toggleMobileSidebar()" aria-label="Menü">☰</button>
-  <div class="nav-logo">
+  <div class="nav-logo" onclick="hideAllViews();document.getElementById('welcome').style.display='';buildWelcome();" style="cursor:pointer" title="Zur Startseite">
     <img src="logo-light.png" alt="mitarbeiter.com">
   </div>
   <div class="nav-divider"></div>
@@ -617,6 +647,7 @@
   <div id="main">
     <div id="welcome"></div>
     <div id="chapter-view" style="display:none;padding:32px 36px;max-width:860px"></div>
+    <div id="glossar-view"></div>
     <div id="lesson-view">
       <div class="breadcrumb">
         <span class="bc-course" id="bc-course"></span>
@@ -999,6 +1030,11 @@ function buildWelcome() {
   const vids   = COURSES.reduce((a,c)=>a+c.chapters.reduce((b,ch)=>b+ch.lessons.filter(l=>l.video_url||l.hls_url).length,0),0);
   const watchedTotal = Object.values(progress).filter(p=>p.watched).length;
   document.getElementById('sb-count').textContent = total + ' Lektionen';
+  const glossarCount = (()=>{
+    const seen=new Set();
+    Object.values(CHAPTER_SUMMARIES).forEach(s=>(s.concepts||[]).forEach(c=>{const t=c.term||c;if(t)seen.add(t);}));
+    return seen.size;
+  })();
 
   const courseCards = COURSES.map((c,i) => {
     const lessons = c.chapters.flatMap(ch=>ch.lessons);
@@ -1063,6 +1099,25 @@ function buildWelcome() {
           <div class="wsp-title">Weiterschauen</div>
           ${recentHtml}
         </div>
+        <div class="res-card">
+          <div class="wsp-title">Ressourcen & Downloads</div>
+          <a href="Niggehoff_Akademie_Kompendium.docx" download class="res-dl-btn">
+            <span class="dl-icon">📥</span>
+            <span>Kompendium herunterladen<br><small style="font-weight:400;opacity:.85">Alle Kurse · DOCX · 165 KB</small></span>
+          </a>
+          <div class="res-stat-row">
+            <div class="res-stat" onclick="loadGlossar()">
+              <span class="res-stat-icon">🔤</span>
+              <span>Glossar · Fachbegriffe</span>
+              <span class="res-stat-count">${glossarCount}</span>
+            </div>
+            <div class="res-stat" onclick="showChapterStats()">
+              <span class="res-stat-icon">📖</span>
+              <span>Kapitelübersichten</span>
+              <span class="res-stat-count">${Object.keys(CHAPTER_SUMMARIES).length}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="coming-soon-section">
@@ -1085,9 +1140,60 @@ function openCourse(i) {
   if (hdr && grp) { hdr.classList.add('open'); grp.classList.add('open'); sec.scrollIntoView({block:'start',behavior:'smooth'}); }
 }
 
+function hideAllViews() {
+  ['welcome','lesson-view','chapter-view','glossar-view'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='none';
+  });
+}
+
+function loadGlossar() {
+  hideAllViews();
+  const gv = document.getElementById('glossar-view');
+  gv.style.display = 'block';
+
+  // Collect all unique terms with Wikipedia links
+  const termMap = {};
+  Object.values(CHAPTER_SUMMARIES).forEach(s => {
+    (s.concepts||[]).forEach(c => {
+      const term = c.term || c;
+      if (term && !termMap[term]) termMap[term] = c.wikipedia_de || '';
+    });
+  });
+
+  const sorted = Object.keys(termMap).sort((a,b)=>a.localeCompare(b,'de'));
+  const byLetter = {};
+  sorted.forEach(t => {
+    const l = t[0].toUpperCase();
+    if (!byLetter[l]) byLetter[l] = [];
+    byLetter[l].push({term:t, wiki:termMap[t]});
+  });
+
+  const groupsHtml = Object.entries(byLetter).map(([letter,terms])=>`
+    <div class="glossar-letter-group">
+      <div class="glossar-letter">${letter}</div>
+      <div class="glossar-grid">${terms.map(({term,wiki})=>`
+        <div class="glossar-item">
+          <span>${term}</span>
+          ${wiki ? `<a class="glossar-wiki" href="https://de.wikipedia.org/wiki/${wiki}" target="_blank" rel="noopener">Wiki</a>` : ''}
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  gv.innerHTML = `
+    <div class="glossar-title">Glossar · Fachbegriffe</div>
+    <div class="glossar-sub">${sorted.length} Begriffe aus allen Kursen · Klick auf Wiki öffnet Wikipedia</div>
+    ${groupsHtml}`;
+}
+
+function showChapterStats() {
+  // Just open the first course that has summaries
+  const firstCourse = COURSES[0];
+  if (firstCourse) openCourse(0);
+  document.getElementById('welcome').scrollIntoView({behavior:'smooth'});
+}
+
 function loadChapterSummary(course, chapter, key) {
-  document.getElementById('welcome').style.display='none';
-  document.getElementById('lesson-view').style.display='none';
+  hideAllViews();
   const cv = document.getElementById('chapter-view');
   cv.style.display='block';
   const s = CHAPTER_SUMMARIES[key];
@@ -1096,7 +1202,12 @@ function loadChapterSummary(course, chapter, key) {
   const takeawaysHtml = s.key_takeaways.length
     ? `<div class="chapter-section-hdr">Key Takeaways</div><div class="chapter-view-takeaways">${s.key_takeaways.map(t=>`<div class="kt-item">„${t}"</div>`).join('')}</div>` : '';
   const conceptsHtml = s.concepts.length
-    ? `<div class="chapter-section-hdr">Fachbegriffe</div><div class="chapter-concepts-cloud">${s.concepts.map(c=>`<span class="chapter-concept-tag">${c.term}</span>`).join('')}</div>` : '';
+    ? `<div class="chapter-section-hdr">Fachbegriffe</div><div class="chapter-concepts-cloud">${s.concepts.map(c=>{
+        const term = c.term||c; const wiki = c.wikipedia_de||'';
+        return wiki
+          ? `<a class="chapter-concept-tag" href="https://de.wikipedia.org/wiki/${wiki}" target="_blank" rel="noopener" style="text-decoration:none">${term} <small style="opacity:.6">↗</small></a>`
+          : `<span class="chapter-concept-tag">${term}</span>`;
+      }).join('')}</div>` : '';
   const lessonsHtml = s.lesson_titles.map((t,i)=>{
     const lesson = chapter.lessons[i];
     const entry  = lesson ? allLessons.find(e=>e.lesson===lesson) : null;
@@ -1222,8 +1333,7 @@ function loadLesson(lesson, itemEl, course, chapter) {
   itemEl.classList.add('active'); itemEl.scrollIntoView({block:'nearest'});
   currentLesson = {lesson,item:itemEl,course,chapter};
 
-  document.getElementById('welcome').style.display='none';
-  document.getElementById('chapter-view').style.display='none';
+  hideAllViews();
   document.getElementById('lesson-view').style.display='block';
   document.getElementById('bc-course').textContent = course.title;
   document.getElementById('bc-chapter').textContent = chapter.title;
