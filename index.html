@@ -1141,7 +1141,10 @@ fetch('chapter_summaries.json').then(r=>r.json()).then(d=>{ CHAPTER_SUMMARIES=d;
 loadNotesFromGitHub(); // sync notes from GitHub on startup
 fetch('courses.json')
   .then(r=>r.json())
-  .then(data=>{ ALL_COURSES=data; applyModule(ACTIVE_MODULE); })
+  .then(data=>{
+    ALL_COURSES=data; applyModule(ACTIVE_MODULE);
+    if (!localStorage.getItem(TUTORIAL_KEY())) setTimeout(openTutorial, 800);
+  })
   .catch(()=>{
     document.getElementById('welcome').innerHTML=`<div style="padding:44px;color:#ef4444;font-size:14px"><strong>courses.json nicht gefunden.</strong><br>Starte den Server mit: <code>python3 server.py</code></div>`;
   });
@@ -1660,10 +1663,7 @@ function closeTutorial() {
   document.getElementById('tutorial-overlay').style.display='none';
   localStorage.setItem(TUTORIAL_KEY(), '1');
 }
-// Show on first login
-if (!localStorage.getItem(TUTORIAL_KEY())) {
-  setTimeout(openTutorial, 800);
-}
+// Tutorial shown after data load (see fetch above)
 
 </script>
 </body>
