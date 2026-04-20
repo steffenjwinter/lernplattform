@@ -176,7 +176,7 @@ input:focus{ border-color:var(--bb); background:rgba(0,170,238,.07); box-shadow:
 
     <div class="error-msg" id="error">E-Mail oder Passwort ungültig.</div>
 
-    <form onsubmit="doLogin(event)">
+    <form method="post" onsubmit="doLogin(event)">
       <div class="form-group">
         <label>E-Mail</label>
         <input type="email" id="email" placeholder="dein@mitarbeiter.com"
