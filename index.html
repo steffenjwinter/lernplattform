@@ -624,9 +624,12 @@
       <span class="cs-chevron">▼</span>
     </div>
     <div class="cs-dropdown" id="cs-dd">
-      <div class="cs-head">Aktiv</div>
-      <div class="cs-item active" onclick="selectModule('Niggehoff Training','cs-dd')">
-        <span class="ci-dot"></span>Niggehoff Training
+      <div class="cs-head">Niggehoff</div>
+      <div class="cs-item active" id="cs-item-niggehoff" onclick="selectModule('niggehoff','cs-dd')">
+        <span class="ci-dot"></span>PRO-TRAINING 2026
+      </div>
+      <div class="cs-item" id="cs-item-primer" onclick="selectModule('primer','cs-dd')">
+        <span class="ci-dot"></span>Online Kurs (Primer)
       </div>
       <div class="cs-head">Demnächst</div>
       <div class="cs-item" style="opacity:.5;pointer-events:none">
@@ -659,16 +662,9 @@
   <!-- Theme Toggle -->
   <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Dark/Light wechseln">🌙</button>
 
-  <!-- User Menu -->
-  <div class="user-menu" id="um">
-    <div class="um-btn" onclick="toggleDropdown('um-dd')">
-      <div class="um-avatar" id="um-avatar">?</div>
-      <div class="um-info">
-        <div class="um-name" id="um-name">–</div>
-        <div class="um-role" id="um-role">–</div>
-      </div>
-      <span class="um-chevron">▼</span>
-    </div>
+  <!-- User Menu (avatar only) -->
+  <div class="user-menu" id="um" style="position:relative;">
+    <div class="um-avatar" id="um-avatar" onclick="toggleDropdown('um-dd')" style="cursor:pointer;width:34px;height:34px;border-radius:50%;background:var(--bb);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;border:2px solid rgba(255,255,255,.15);" title="Profil">?</div>
     <div class="um-dropdown" id="um-dd">
       <div class="um-header">
         <div class="um-header-name" id="dd-name">–</div>
@@ -835,8 +831,6 @@ const ROLE_LABELS = { inhaber: 'Inhaber', admin: 'Admin' };
 const ROLE_COLORS = { inhaber: 'badge-inhaber', admin: 'badge-admin' };
 function applyAuth() {
   document.getElementById('um-avatar').textContent = auth.initials || auth.name.slice(0,2).toUpperCase();
-  document.getElementById('um-name').textContent   = auth.name;
-  document.getElementById('um-role').textContent   = ROLE_LABELS[auth.role] || auth.role;
   document.getElementById('dd-name').textContent   = auth.name;
   document.getElementById('dd-email').textContent  = auth.email;
   const badge = document.getElementById('dd-badge');
@@ -1045,10 +1039,24 @@ document.addEventListener('click', e => {
   if (!e.target.closest('.course-switcher') && !e.target.closest('.user-menu'))
     document.querySelectorAll('.cs-dropdown,.um-dropdown').forEach(d => d.classList.remove('open'));
 });
-function selectModule(name, ddId) {
-  document.getElementById('cs-label').textContent = name;
-  document.getElementById('cs-dd').classList.remove('open');
-  document.getElementById('sb-course-name').textContent = name;
+function applyModule(mod) {
+  ACTIVE_MODULE = mod;
+  COURSES = ALL_COURSES.filter(c => c.module === mod);
+  searchIdx = [];
+  buildSidebar(); buildFavPanel(); buildWelcome(); buildSearchIdx();
+  const label = MODULE_LABELS[mod] || mod;
+  document.getElementById('cs-label').textContent = label;
+  document.getElementById('sb-course-name').textContent = label;
+  ['niggehoff','primer'].forEach(m => {
+    const el = document.getElementById('cs-item-'+m);
+    if (el) el.classList.toggle('active', m === mod);
+  });
+}
+function selectModule(mod, ddId) {
+  document.getElementById(ddId).classList.remove('open');
+  applyModule(mod);
+  hideAllViews();
+  document.getElementById('welcome').style.display = '';
 }
 
 // ── PROFILE ───────────────────────────────────────────────
@@ -1117,7 +1125,9 @@ function saveProgressSetting() {
 document.getElementById('profile-modal').addEventListener('click', e => { if (e.target===document.getElementById('profile-modal')) closeProfile(); });
 
 // ── DATA ──────────────────────────────────────────────────
-let COURSES=[], SUMMARIES={}, CHAPTER_SUMMARIES={}, allLessons=[], searchIdx=[], currentLesson=null;
+let ALL_COURSES=[], COURSES=[], SUMMARIES={}, CHAPTER_SUMMARIES={}, allLessons=[], searchIdx=[], currentLesson=null;
+let ACTIVE_MODULE = 'niggehoff';
+const MODULE_LABELS = { niggehoff: 'PRO-TRAINING 2026', primer: 'Online Kurs (Primer)' };
 function estTime(lesson) {
   if (!lesson.transcript) return null;
   return Math.max(1, Math.round(lesson.transcript.split(/\s+/).length / 130));
@@ -1127,7 +1137,7 @@ fetch('chapter_summaries.json').then(r=>r.json()).then(d=>{ CHAPTER_SUMMARIES=d;
 loadNotesFromGitHub(); // sync notes from GitHub on startup
 fetch('courses.json')
   .then(r=>r.json())
-  .then(data=>{ COURSES=data; buildSidebar(); buildFavPanel(); buildWelcome(); buildSearchIdx(); })
+  .then(data=>{ ALL_COURSES=data; applyModule(ACTIVE_MODULE); })
   .catch(()=>{
     document.getElementById('welcome').innerHTML=`<div style="padding:44px;color:#ef4444;font-size:14px"><strong>courses.json nicht gefunden.</strong><br>Starte den Server mit: <code>python3 server.py</code></div>`;
   });
@@ -1306,41 +1316,35 @@ function loadChapterSummary(course, chapter, key) {
   const cv = document.getElementById('chapter-view');
   cv.style.display='block';
   const s = CHAPTER_SUMMARIES[key];
-  if (!s) { cv.innerHTML='<p>Keine Kapitelübersicht verfügbar.</p>'; return; }
-  const bulletsHtml = s.bullets.map(b=>`<li>${b}</li>`).join('');
-  const takeawaysHtml = s.key_takeaways.length
+  const bulletsHtml = s?.bullets?.length ? `<div class="chapter-section-hdr">Kernaussagen</div><ul class="chapter-view-bullets">${s.bullets.map(b=>`<li>${b}</li>`).join('')}</ul>` : '';
+  const takeawaysHtml = s?.key_takeaways?.length
     ? `<div class="chapter-section-hdr">Key Takeaways</div><div class="chapter-view-takeaways">${s.key_takeaways.map(t=>`<div class="kt-item">„${t}"</div>`).join('')}</div>` : '';
-  const conceptsHtml = s.concepts.length
+  const conceptsHtml = s?.concepts?.length
     ? `<div class="chapter-section-hdr">Fachbegriffe</div><div class="chapter-concepts-cloud">${s.concepts.map(c=>{
         const term = c.term||c; const wiki = c.wikipedia_de||'';
         return wiki
           ? `<a class="chapter-concept-tag" href="https://de.wikipedia.org/wiki/${wiki}" target="_blank" rel="noopener" style="text-decoration:none">${term} <small style="opacity:.6">↗</small></a>`
           : `<span class="chapter-concept-tag">${term}</span>`;
       }).join('')}</div>` : '';
-  const lessonsHtml = s.lesson_titles.map((t,i)=>{
-    const lesson = chapter.lessons[i];
-    const entry  = lesson ? allLessons.find(e=>e.lesson===lesson) : null;
-    return `<div class="chapter-lesson-chip" ${entry?`onclick="loadLesson(allLessons.find(e=>e.lesson.id==='${lesson?.id}')?.lesson, allLessons.find(e=>e.lesson.id==='${lesson?.id}')?.item, allLessons.find(e=>e.lesson.id==='${lesson?.id}')?.course, allLessons.find(e=>e.lesson.id==='${lesson?.id}')?.chapter)"`:''}>
-      <span style="color:var(--bb);font-size:10px">▶</span>${t}</div>`;
+  const lessonsHtml = chapter.lessons.map(lesson => {
+    return `<div class="chapter-lesson-chip" data-lid="${lesson.id}">
+      <span style="color:var(--bb);font-size:10px">▶</span>${lesson.title}</div>`;
   }).join('');
 
   cv.innerHTML=`
     <div class="chapter-view-course">${course.title}</div>
     <div class="chapter-view-title">${chapter.title}</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:24px">${s.lesson_count} Lektionen in diesem Kapitel</div>
-    <div class="chapter-section-hdr">Kernaussagen</div>
-    <ul class="chapter-view-bullets">${bulletsHtml}</ul>
-    ${takeawaysHtml}
-    ${conceptsHtml}
+    <div style="font-size:12px;color:var(--muted);margin-bottom:24px">${chapter.lessons.length} Lektionen in diesem Kapitel</div>
+    ${bulletsHtml}${takeawaysHtml}${conceptsHtml}
     <div class="chapter-section-hdr">Lektionen in diesem Kapitel</div>
     <div class="chapter-lessons-grid">${lessonsHtml}</div>
   `;
-  cv.querySelectorAll('.chapter-lesson-chip').forEach((chip, i) => {
-    const lesson = chapter.lessons[i];
-    if (!lesson) return;
+  cv.querySelectorAll('.chapter-lesson-chip').forEach(chip => {
+    const lid = chip.dataset.lid;
+    if (!lid) return;
     chip.onclick = () => {
-      const entry = allLessons.find(e=>e.lesson.id===lesson.id);
-      if (entry) loadLesson(entry.lesson, entry.item, entry.course, entry.chapter);
+      const entry = allLessons.find(e=>e.lesson.id===lid);
+      if (entry) { loadLesson(entry.lesson, entry.item, entry.course, entry.chapter); toggleMobileSidebar(true); }
     };
   });
 }
@@ -1367,8 +1371,10 @@ function buildSidebar() {
         const progClass = getSettings().trackProgress ? (chWatched===chTotal&&chTotal>0?' done':chWatched>0?' partial':'') : '';
         const progBadge = getSettings().trackProgress
           ? `<span class="ch-prog${progClass}">${chWatched}/${chTotal}</span>` : '';
-        lbl.innerHTML=`<span style="flex:1">${ch.title}</span>${progBadge}${hasSumm?'<span style="font-size:9px;opacity:.35;margin-left:6px;cursor:pointer">▸</span>':''}`;
-        if (hasSumm) lbl.onclick=(e)=>{ e.stopPropagation(); loadChapterSummary(course,ch,key); };
+        const sumIcon = hasSumm ? '<span style="font-size:9px;color:rgba(0,170,238,.5);margin-left:6px">▸</span>' : '<span style="font-size:9px;opacity:.15;margin-left:6px">▸</span>';
+        lbl.innerHTML=`<span style="flex:1">${ch.title}</span>${progBadge}${sumIcon}`;
+        lbl.style.cursor='pointer';
+        lbl.onclick=(e)=>{ e.stopPropagation(); loadChapterSummary(course,ch,key); };
         grp.appendChild(lbl);
       }
       ch.lessons.forEach(lesson => {
