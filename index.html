@@ -94,7 +94,7 @@
   mark{background:rgba(0,170,238,.18);color:#0088CC;border-radius:2px;padding:0 1px;}
 
   /* User menu */
-  .user-menu{position:relative;}
+  .user-menu{position:relative;display:flex;align-items:center;flex-shrink:0;}
   .um-btn{
     display:flex;align-items:center;gap:8px;padding:5px 10px;
     border-radius:8px;cursor:pointer;transition:background .15s;
@@ -1041,7 +1041,11 @@ document.addEventListener('click', e => {
 });
 function applyModule(mod) {
   ACTIVE_MODULE = mod;
-  COURSES = ALL_COURSES.filter(c => c.module === mod);
+  // fallback: if courses have no module field (old cache), show all as niggehoff
+  const hasModules = ALL_COURSES.some(c => c.module);
+  COURSES = hasModules
+    ? ALL_COURSES.filter(c => c.module === mod)
+    : (mod === 'niggehoff' ? ALL_COURSES.filter(c => c.id !== 'Verkaufspsychologie Online Kurs') : []);
   searchIdx = [];
   buildSidebar(); buildFavPanel(); buildWelcome(); buildSearchIdx();
   const label = MODULE_LABELS[mod] || mod;
