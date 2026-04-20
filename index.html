@@ -123,6 +123,8 @@
   }
   .badge-inhaber{background:#fef3c7;color:#92400e;}
   .badge-admin{background:#dbeafe;color:#1e40af;}
+  [data-theme="dark"] .badge-inhaber{background:rgba(251,191,36,.2);color:#fbbf24;}
+  [data-theme="dark"] .badge-admin{background:rgba(59,130,246,.2);color:#93c5fd;}
   .um-item{
     padding:10px 16px;cursor:pointer;font-size:13px;color:var(--text);
     display:flex;align-items:center;gap:9px;transition:background .12s;
@@ -226,7 +228,7 @@
 
   /* WELCOME */
   #welcome{padding:44px;}
-  .wg{font-size:22px;font-weight:800;color:var(--bd);margin-bottom:4px;}
+  .wg{font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;}
   .ws{font-size:14px;color:var(--muted);margin-bottom:36px;}
   .stats-row{display:flex;gap:14px;margin-bottom:36px;flex-wrap:wrap;}
   .stat-card{background:var(--wh);border:1px solid var(--border);border-radius:12px;
@@ -242,7 +244,7 @@
   }
   .cc:hover{border-color:var(--acc);transform:translateY(-2px);
     box-shadow:0 8px 24px rgba(0,170,238,.12);}
-  .cc-title{font-size:12px;font-weight:700;color:var(--bd);margin-bottom:5px;line-height:1.4;}
+  .cc-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:5px;line-height:1.4;}
   .cc-meta{font-size:11px;color:var(--muted);}
   .cc-badge{margin-top:10px;display:inline-block;padding:3px 10px;
     background:var(--acc-l);color:var(--acc);border-radius:20px;
@@ -259,7 +261,7 @@
     display:flex;align-items:center;gap:5px;}
   .bc-course{color:var(--acc);font-weight:700;}
   .bc-sep{color:var(--border);}
-  .lesson-title-h{font-size:19px;font-weight:800;color:var(--bd);
+  .lesson-title-h{font-size:19px;font-weight:800;color:var(--text);
     margin-bottom:18px;line-height:1.3;}
 
   .lesson-grid{display:grid;grid-template-columns:1fr 300px;gap:18px;}
@@ -296,7 +298,7 @@
   .concept-chip{
     display:inline-flex;align-items:center;gap:5px;
     background:rgba(0,170,238,.07);border:1px solid rgba(0,170,238,.18);
-    border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--bd);
+    border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--text);
   }
   .concept-chip a{color:var(--bb);text-decoration:none;font-size:10px;
     padding:1px 5px;background:rgba(0,170,238,.12);border-radius:10px;transition:background .12s;}
@@ -351,7 +353,7 @@
   .modal-overlay.open{display:flex;}
   .modal{background:var(--wh);border-radius:20px;padding:32px;width:100%;
     max-width:460px;box-shadow:0 24px 64px rgba(0,0,0,.2);}
-  .modal h2{font-size:18px;font-weight:800;color:var(--bd);margin-bottom:20px;}
+  .modal h2{font-size:18px;font-weight:800;color:var(--text);margin-bottom:20px;}
   .modal-avatar{width:72px;height:72px;border-radius:50%;background:var(--bb);
     display:flex;align-items:center;justify-content:center;font-size:24px;
     font-weight:800;color:#fff;margin:0 auto 20px;}
@@ -489,9 +491,9 @@
   .cs-big-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
     background:linear-gradient(180deg,var(--acc),var(--bd));}
   .cs-big-card-left{padding-left:8px;}
-  .cs-big-card-title{font-size:15px;font-weight:800;color:var(--bd);margin-bottom:4px;}
+  .cs-big-card-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;}
   .cs-big-card-sub{font-size:12px;color:var(--muted);}
-  .cs-classified{font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--bd);
+  .cs-classified{font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--text);
     background:var(--bg);border:1px solid var(--border);border-radius:4px;
     padding:4px 12px;white-space:nowrap;text-transform:uppercase;font-family:'Courier New',monospace;}
 
