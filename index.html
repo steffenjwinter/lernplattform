@@ -656,8 +656,8 @@
     <div id="sr"></div>
   </div>
 
-  <!-- Kompendium Download -->
-  <a href="Niggehoff_Akademie_Kompendium.docx" download title="Kompendium herunterladen (DOCX)" class="theme-btn" style="text-decoration:none;font-size:16px;" aria-label="Kompendium herunterladen">📥</a>
+  <!-- Kompendium Download (module-aware) -->
+  <a id="kompendium-btn" href="Niggehoff_Akademie_Kompendium.docx" download title="Kompendium herunterladen (DOCX)" class="theme-btn" style="text-decoration:none;font-size:16px;" aria-label="Kompendium herunterladen">📥</a>
 
   <!-- Theme Toggle -->
   <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Dark/Light wechseln">🌙</button>
@@ -1055,6 +1055,12 @@ function applyModule(mod) {
     const el = document.getElementById('cs-item-'+m);
     if (el) el.classList.toggle('active', m === mod);
   });
+  const kb = document.getElementById('kompendium-btn');
+  if (kb) {
+    const files = { niggehoff: 'Niggehoff_Akademie_Kompendium.docx', primer: 'Niggehoff_Primer_Kompendium.docx' };
+    kb.href = files[mod] || files.niggehoff;
+    kb.title = mod === 'primer' ? 'Primer-Kompendium herunterladen (DOCX)' : 'Kompendium herunterladen (DOCX)';
+  }
 }
 function selectModule(mod, ddId) {
   document.getElementById(ddId).classList.remove('open');
