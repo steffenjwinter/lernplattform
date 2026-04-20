@@ -10,7 +10,11 @@ Kurs_TUV/
 tuev_library_debug.html
 
 # Scraper / Build-Skripte (lokal only)
-scrape*.py
+scrape.py
+scrape_phase*.py
+scrape_pro_training.py
+scrape_primer.py
+scrape_tuev.py
 download_audio.py
 merge_videos.py
 build_courses_json.py
@@ -19,7 +23,12 @@ generate_summaries.py
 generate_kompendium.py
 generate_chapter_summaries.py
 server.py
+transcribe_missing.py
+update_courses_from_kurs.py
 *.log
+
+# Scraper v2 output (lokal only)
+data/
 
 # Debug-Dateien
 debug_*

@@ -1,0 +1,236 @@
+---
+# ── Niggehoff Memberspot Scraper – Konfiguration ──────────────────────────────
+base_url: "https://online-verkaufspsychologie.mymemberspot.de"
+output_dir: "data"           # relativ zum Skript-Verzeichnis
+
+credentials:
+  email: "cc@marketing-wizards.de"
+  password: "Mwiz123!"
+
+rate_limit:
+  min_seconds: 2.0           # Minimum Wartezeit zwischen Requests
+  max_seconds: 3.5           # Maximum (Jitter)
+  retry_max: 4               # Anzahl Retries bei 429/5xx
+  retry_backoff_base: 2.0    # Exponentieller Backoff-Faktor
+
+# ── BLACKLIST ─────────────────────────────────────────────────────────────────
+# Kurse werden komplett übersprungen; bereits heruntergeladene Daten bleiben.
+blacklist:
+  course_ids:
+    - "XROhBIACPvGuI0eiyv4O"   # Live-Calls PRO-TRAINING 2026 (292 Lektionen)
+    - "pawMAvOIjL6i4JRdbNzz"   # Live-Calls SALES & DIREKTAKQUISE (125)
+    - "x2HbUKgWFldmSBhXL129"   # Live-Calls STRATEGIE & MENTALITÄT (105)
+    - "R8pNMvQUz3hrJ7L32mTq"   # COBE special Onboarding
+    - "ZjKaev2vUEOVPZurW775"   # Unbekannter Kurs (nicht in Whitelist)
+
+  # Kapitel-Titel-Muster (Regex, case-insensitive) — gilt global in allen Modulen
+  chapter_title_patterns:
+    - "live.?call.?aufzeichnung"
+    - "live.?calls"
+    - "starte hier"
+    - "onboarding"
+    - "import termine"
+    - "how to use live"
+
+# ── WHITELIST ─────────────────────────────────────────────────────────────────
+# Nur diese Module werden gescrapt. Reihenfolge = Scrape-Reihenfolge.
+# expected_total: Soll-Lektionszahl (Validierung nach jedem Lauf).
+# expected_chapters: liste mit {hint, expected} — hint = Schlüsselwort im Kapitel-
+#   titel für die Zuordnung (fuzzy match). Falls kein Match: „?" in Ausgabe.
+modules:
+
+  - name: "The Perfect Pitch"
+    course_id: "PxXfgf0EXq0wY3t9KCHtV"
+    slug: "perfect-pitch"
+    expected_total: 14
+    # Flache Struktur, kein Kapitel — beim Scrape bestätigen
+    expected_chapters: []
+
+  - name: "Online Verkaufspsychologie PRO-TRAINING 2026"
+    course_id: "KCEDUBkgsCXJogPiC3CY"
+    slug: "online-vkps-pro"
+    expected_total: 164
+    expected_chapters:
+      - {hint: "grundlagen",          expected: 9}
+      - {hint: "neuroprofiling",      expected: 39}
+      - {hint: "kundengewinnung",     expected: 45}
+      - {hint: "copywriting",         expected: 20}
+      - {hint: "preispsychologie",    expected: 7}
+      - {hint: "picture segment",     expected: 9}
+      - {hint: "neuro-trigger",       expected: 23}
+      - {hint: "experten",            expected: 10}
+      - {hint: null,                  expected: 2}   # Kapitelname beim Scrape ergänzen
+
+  - name: "SALES-Masterclass"
+    course_id: "CiPWZpN7W7KUEkZtMyAr"
+    slug: "sales-masterclass"
+    expected_total: 96
+    expected_chapters:
+      - {hint: "angebot",             expected: 11}
+      - {hint: "mentalität",          expected: 11}
+      - {hint: "vorqualifizierung",   expected: 10}
+      - {hint: "verkaufsgespräch",    expected: 11}
+      - {hint: "einwandbehandlung",   expected: 14}
+      - {hint: "selbstbewusstsein",   expected: 5}
+      - {hint: "storytelling",        expected: 6}
+      - {hint: "framings",            expected: 5}
+      - {hint: "aufmerksamkeit",      expected: 4}
+      - {hint: "übung",               expected: 5}
+      - {hint: "inszenierung",        expected: 5}
+      - {hint: "integrale",           expected: 9}
+
+  - name: "Personal Branding mit Fotos"
+    course_id: "8cjJKACRgHD2oojmDmBt"
+    slug: "personal-branding"
+    expected_total: 6
+    expected_chapters: []   # Flache Struktur
+
+  - name: "Headline-Psychologie Masterclass"
+    course_id: "oWuxFx4SVPWccKnjlTXA"
+    slug: "headline-psychologie"
+    expected_total: null    # Einführung-Lektionszahl unbekannt — beim Scrape ergänzen
+    expected_chapters:
+      - {hint: "einführung",          expected: null}
+      - {hint: "headline rezepte",    expected: 7}
+      - {hint: "beste headline",      expected: 9}
+      - {hint: "feedback",            expected: 5}
+
+  - name: "Social Media Sog-Marketing (SMS)"
+    course_id: "8Rcz1jgzLUurTuurZNq0"
+    slug: "sms-social-media"
+    expected_total: 26
+    expected_chapters:
+      - {hint: "linkedin",            expected: 20}
+      - {hint: "content plan",        expected: 5}
+      - {hint: "reel",                expected: 1}
+
+  - name: "Psychologisch-optimiertes Trainings-System (PTS)"
+    course_id: "npmkwFRR6bi6bbUV8PtX"
+    slug: "pts"
+    expected_total: 14
+    expected_chapters:
+      - {hint: "trainings-system",    expected: 11}
+      - {hint: "memberspot",          expected: 3}   # ⚑ Mögliches Duplikat zu Software-Tools
+
+  - name: "Leads ohne Limit (LOL)"
+    course_id: "2QIDPcjhLCufLYmAeOGQ"
+    slug: "lol-leads"
+    expected_total: 33
+    expected_chapters:
+      - {hint: "einleitung",          expected: 5}
+      - {hint: "fundamente",          expected: 14}
+      - {hint: "outreach",            expected: 10}
+      - {hint: "value-call",          expected: 2}
+      - {hint: "typische fehler",     expected: 1}
+      - {hint: "ausblick",            expected: 1}
+
+  - name: "Magnetic Offer System (MOS)"
+    course_id: "dSNtuWQ7WOtfniHslwwD"
+    slug: "mos-magnetic-offer"
+    expected_total: 44
+    expected_chapters:
+      - {hint: "grundlagen",          expected: 5}
+      - {hint: "value-based",         expected: 7}
+      - {hint: "arten von angeboten", expected: 9}
+      - {hint: "angebotstreppe",      expected: 6}
+      - {hint: "beispielangebote",    expected: 8}
+      - {hint: "denkfehler",          expected: 6}
+      - {hint: "wachstumsretainer",   expected: 3}
+
+  - name: "Psychologisches Outreach System (POS)"
+    course_id: "l38Yy6SVSuMaHwnhn29H"
+    slug: "pos-outreach"
+    expected_total: 24
+    expected_chapters:
+      - {hint: "fundament",           expected: 8}
+      - {hint: "software",            expected: 12}
+      - {hint: "cases",               expected: 3}
+      - {hint: "copy",                expected: 1}
+
+  - name: "Software Tools"
+    course_id: "qW0lSPFqRE2HhkJSbOqO"
+    slug: "software-tools"
+    expected_total: 14
+    expected_chapters:
+      - {hint: "website",             expected: 11}
+      - {hint: "memberspot",          expected: 3}   # ⚑ Mögliches Duplikat zu PTS
+
+  - name: "Circle of Business Excellence (COBE)"
+    course_id: "WKSw9LWiDYdpslgMVnB2"
+    slug: "cobe"
+    expected_total: 162    # Nach Skip von "Live Call Aufzeichnungen" (33)
+    skip_chapter_patterns:
+      - "live.?call"       # Modulspezifische Zusatz-Skip-Regel
+    expected_chapters:
+      - {hint: "strategie.*fundament",      expected: 4}
+      - {hint: "prozessaufbau",             expected: 10}
+      - {hint: "mitarbeiterführung",        expected: 8}
+      - {hint: "sales excellence",          expected: 30}
+      - {hint: "trainings-system",          expected: 12}  # ⚑ Duplikat PTS prüfen
+      - {hint: "kommunikation.*masterclass",expected: 32}
+      - {hint: "neuro-personality",         expected: 34}
+      - {hint: "content masterclass",       expected: 3}
+      - {hint: "special calls",             expected: 2}
+      - {hint: "content retainer",          expected: 21}
+      - {hint: "social media delegieren",   expected: 6}
+
+  - name: "Speed Content System (SCS)"
+    course_id: "gOdfjcxvGKDkk3QA26NY"
+    slug: "scs-speed-content"
+    expected_total: 37
+    expected_chapters:
+      - {hint: "grundlagen",          expected: 3}
+      - {hint: "schritt 1",           expected: 4}
+      - {hint: "schritt 2",           expected: 2}
+      - {hint: "schritt 3",           expected: 7}
+      - {hint: "schritt 4",           expected: 3}
+      - {hint: "bonus.*1",            expected: 4}
+      - {hint: "schritt 5",           expected: 8}
+      - {hint: "bonus.*2",            expected: 1}
+      - {hint: "software",            expected: 3}
+      - {hint: "vorlage",             expected: 2}
+
+  - name: "Recruiting Psychologie Masterclass"
+    course_id: "CSenoDXpxYZzguMjg5WB"
+    slug: "recruiting"
+    expected_total: 27
+    expected_chapters:
+      - {hint: "fundament.*personal fit",   expected: 8}
+      - {hint: "stelle ausschreiben",       expected: 7}
+      - {hint: "gespräch",                  expected: 12}
+
+  - name: "Videomarketing Psychologie (Beta)"
+    course_id: "WcCtBk0rT3neWvU3UYK3"
+    slug: "videomarketing"
+    expected_total: 3
+    expected_chapters: []
+
+  - name: "Fearless Follow-Up System"
+    course_id: "4sjMFLPvey2LRYAE8em2"
+    slug: "fearless-followup"
+    expected_total: 77
+    expected_chapters:
+      - {hint: "einleitung",          expected: 3}
+      - {hint: "leitfaden",           expected: 8}
+      - {hint: "orakel",              expected: 9}
+      - {hint: "micro-stories",       expected: 15}
+      - {hint: "show-rate",           expected: 2}
+      - {hint: "überleitung",         expected: 4}
+      - {hint: "typische fehler",     expected: 11}
+      - {hint: "einwandbehandlung",   expected: 13}
+      - {hint: "mentalitäten",        expected: 3}
+      - {hint: "meldet sich nicht",   expected: 9}
+
+  - name: "Customer Communication System (CCS)"
+    course_id: "EKwMAHTJH2lXKzowdvBr"
+    slug: "ccs-customer-comm"
+    expected_total: 8
+    expected_chapters:
+      - {hint: "fundament",           expected: 8}
+
+  - name: "Shop-Boost-Training"
+    course_id: "6meNXN8RcDbcZT7h9rsj"
+    slug: "shop-boost"
+    expected_total: 12
+    expected_chapters:
+      - {hint: "e-commerce",          expected: 12}
